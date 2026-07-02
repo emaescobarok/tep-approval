@@ -33,6 +33,18 @@ export async function requireAdmin(): Promise<Profile> {
   return profile;
 }
 
+// ¿El usuario de agencia puede gestionar (admin o Project Manager)?
+export function canManage(profile: Pick<Profile, "is_admin" | "is_pm">): boolean {
+  return profile.is_admin || profile.is_pm;
+}
+
+// Admin o PM: agregar/editar cuentas, invitar personas, asignar clientes.
+export async function requireManager(): Promise<Profile> {
+  const profile = await requireAgency();
+  if (!canManage(profile)) redirect("/agency/dashboard");
+  return profile;
+}
+
 export async function requireClient(): Promise<Profile> {
   const profile = await requireProfile();
   if (profile.role !== "client" || !profile.client_id) {

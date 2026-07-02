@@ -22,7 +22,23 @@ export interface Profile {
   client_id: string | null;
   full_name: string | null;
   is_admin: boolean;
+  is_pm: boolean;
   created_at: string;
+}
+
+// Nivel de un usuario de la agencia (derivado de is_admin / is_pm).
+export type AgencyTier = "admin" | "pm" | "strategist";
+
+export const AGENCY_TIER_LABEL: Record<AgencyTier, string> = {
+  admin: "Admin",
+  pm: "Project Manager",
+  strategist: "Estratega",
+};
+
+export function agencyTier(p: { is_admin: boolean; is_pm: boolean }): AgencyTier {
+  if (p.is_admin) return "admin";
+  if (p.is_pm) return "pm";
+  return "strategist";
 }
 
 export interface ClientAssignment {

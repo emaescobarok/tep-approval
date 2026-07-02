@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase/server";
+import { requireAdmin, requireManager } from "@/lib/auth";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 
 // Sube un logo (File del FormData) al bucket público y devuelve su URL.
 async function uploadLogo(
@@ -48,12 +48,18 @@ export async function createClientAction(
   return { ok: true };
 }
 
-// Edita un cliente (nombre, contacto y/o logo). Solo admin.
+// Edita un cliente (nombre, contacto y/o logo). Admin o Project Manager
+// (el PM solo sobre las cuentas que tiene asignadas).
 export async function updateClientAction(
   clientId: string,
   formData: FormData
 ): Promise<{ ok: boolean; error?: string }> {
-  await requireAdmin();
+  await requireManager();
+  // Chequeo de acceso: la RLS solo devuelve el cliente si el manager lo puede ver.
+  const scoped = await createClient();
+  const { data: allowed } = await scoped.from("clients").select("id").eq("id", clientId).maybeSingle();
+  if (!allowed) return { ok: false, error: "No tenés acceso a esta cuenta." };
+
   const name = String(formData.get("name") || "").trim();
   const contactName = String(formData.get("contact_name") || "").trim();
   const contactEmail = String(formData.get("contact_email") || "").trim();

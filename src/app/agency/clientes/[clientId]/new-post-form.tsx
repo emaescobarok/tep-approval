@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { createPost } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   PLATAFORMA_DEFAULT,
   TIPOS_FORM,
@@ -115,14 +116,10 @@ export function NewPostForm({
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium">
+          <label className="whitespace-nowrap text-sm font-medium">
             Fecha de publicación <span className="text-destructive">*</span>
           </label>
-          <input
-            type="date" value={publishDate} required
-            onChange={(e) => setPublishDate(e.target.value)}
-            className="h-10 rounded-lg border border-input bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-          />
+          <DatePicker value={publishDate} onChange={setPublishDate} required />
         </div>
       </div>
 
@@ -151,7 +148,15 @@ export function NewPostForm({
         <label className="text-sm font-medium">Media (imágenes/videos, en orden)</label>
         <input
           type="file" multiple accept="image/*,video/*"
-          onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+          onChange={(e) =>
+            setFiles(
+              // Orden por nombre (numérico natural): el explorador de Windows no
+              // garantiza el orden de selección, así el carrusel respeta 1, 2, 3...
+              Array.from(e.target.files ?? []).sort((a, b) =>
+                a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" })
+              )
+            )
+          }
           className="text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-secondary file:px-3 file:py-2 file:text-sm"
         />
         {files.length > 0 && (

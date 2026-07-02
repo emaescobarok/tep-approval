@@ -2,11 +2,12 @@ import { MediaThumb } from "@/components/media-thumb";
 import type { Post } from "@/lib/types";
 import { Play, LayoutGrid } from "lucide-react";
 
-// Ordena por fecha de publicación (las sin fecha van al final), luego por posición.
+// Ordena como el feed de Instagram: lo más reciente primero (fecha descendente).
+// Las piezas sin fecha van al final, luego por posición.
 function sortForFeed(posts: Post[]): Post[] {
   return [...posts].sort((a, b) => {
     if (a.publish_date && b.publish_date) {
-      return a.publish_date < b.publish_date ? -1 : a.publish_date > b.publish_date ? 1 : 0;
+      return a.publish_date > b.publish_date ? -1 : a.publish_date < b.publish_date ? 1 : 0;
     }
     if (a.publish_date) return -1;
     if (b.publish_date) return 1;

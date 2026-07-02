@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAgency } from "@/lib/auth";
+import { requireAgency, requireManager } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createInvitedUser, type InviteResult } from "@/lib/invites";
 import {
@@ -90,6 +90,65 @@ export async function createPost(input: {
   return { ok: true };
 }
 
+// Edita una pieza existente (solo agencia): copy, fecha, Drive, portada y el
+// conjunto/orden de imágenes. El cliente-browser ya subió los archivos nuevos a
+// Storage; acá persistimos filas y borramos del Storage lo que se quitó.
+export async function updatePost(input: {
+  postId: string;
+  clientId: string;
+  tipo: PostTipo;
+  copy: string;
+  publishDate?: string | null;
+  driveUrl?: string;
+  coverPath?: string | null;
+  media: MediaInput[];
+  removedPaths: string[];
+}): Promise<{ ok: boolean; error?: string }> {
+  await requireAgency();
+  const supabase = await createClient();
+
+  const copyTrim = input.copy.trim();
+  if (TIPOS_CON_COPY_OBLIGATORIO.includes(input.tipo) && !copyTrim) {
+    return { ok: false, error: "El copy es obligatorio para carrusel y texto." };
+  }
+  if (!input.publishDate) {
+    return { ok: false, error: "Elegí la fecha de publicación." };
+  }
+
+  const { error: upErr } = await supabase
+    .from("posts")
+    .update({
+      copy: copyTrim || null,
+      publish_date: input.publishDate,
+      drive_url: input.driveUrl?.trim() || null,
+      cover_path: input.coverPath || null,
+    })
+    .eq("id", input.postId);
+  if (upErr) return { ok: false, error: upErr.message };
+
+  // Borra del Storage los archivos que se quitaron (imágenes o portada vieja).
+  if (input.removedPaths.length) {
+    await supabase.storage.from("post-media").remove(input.removedPaths);
+  }
+
+  // Reescribe las filas de media en el nuevo orden (position 0,1,2...).
+  await supabase.from("post_media").delete().eq("post_id", input.postId);
+  if (input.media.length) {
+    const rows = input.media.map((m, i) => ({
+      post_id: input.postId,
+      storage_path: m.storage_path,
+      media_type: m.media_type,
+      position: i,
+    }));
+    const { error: mErr } = await supabase.from("post_media").insert(rows);
+    if (mErr) return { ok: false, error: mErr.message };
+  }
+
+  revalidatePath(`/agency/clientes/${input.clientId}`);
+  revalidatePath(`/agency/piezas/${input.postId}`);
+  return { ok: true };
+}
+
 // Guarda la introducción de la planificación del mes (la escribe el estratega).
 export async function updateIntro(input: {
   clientId: string;
@@ -146,12 +205,12 @@ export async function resolveChanges(postId: string, clientId: string) {
 }
 
 // Invita a un usuario CLIENTE del cliente indicado. Devuelve el link de invitación.
-// Autorización: el usuario debe poder acceder al cliente (RLS via clients select).
+// Solo Admin o Project Manager (dar permisos a personas).
 export async function inviteClientUser(
   clientId: string,
   formData: FormData
 ): Promise<InviteResult> {
-  await requireAgency();
+  await requireManager();
   const email = String(formData.get("email") || "").trim();
   const fullName = String(formData.get("full_name") || "").trim();
   if (!email) return { ok: false, error: "Falta el email." };

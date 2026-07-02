@@ -1,6 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink, CalendarDays } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink, CalendarDays } from "lucide-react";
+import { NavArrow } from "@/components/nav-arrow";
 import { formatPublishDate } from "@/lib/utils";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -33,6 +35,19 @@ export default async function PiezaPage({
 
   const p = post as Post;
 
+  // Piezas vecinas del mismo calendario, ordenadas por fecha (menor a mayor)
+  // para poder navegar con flechas. Las sin fecha van al final.
+  const { data: siblingRows } = await supabase
+    .from("posts")
+    .select("id, publish_date, position")
+    .eq("calendar_id", p.calendar_id)
+    .order("publish_date", { ascending: true, nullsFirst: false })
+    .order("position", { ascending: true });
+  const siblings = (siblingRows as { id: string }[]) ?? [];
+  const idx = siblings.findIndex((s) => s.id === postId);
+  const prevId = idx > 0 ? siblings[idx - 1].id : null;
+  const nextId = idx >= 0 && idx < siblings.length - 1 ? siblings[idx + 1].id : null;
+
   const { data: mediaRows } = await supabase
     .from("post_media").select("*").eq("post_id", postId).order("position");
   const media = (mediaRows as PostMedia[]) ?? [];
@@ -51,9 +66,26 @@ export default async function PiezaPage({
     <>
       <Topbar title="Detalle de pieza" subtitle={TIPO_LABEL[p.tipo]} />
       <main className="mx-auto max-w-6xl px-5 py-6">
-        <Link href="/client/calendario" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-4" /> Volver al calendario
-        </Link>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <Link href="/client/calendario" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="size-4" /> Volver al calendario
+          </Link>
+          {siblings.length > 1 && (
+            <div className="flex items-center gap-1">
+              {idx >= 0 && (
+                <span className="mr-1 text-xs text-muted-foreground">
+                  {idx + 1} de {siblings.length}
+                </span>
+              )}
+              <NavArrow href={prevId ? `/client/pieza/${prevId}` : null} label="Pieza anterior">
+                <ChevronLeft className="size-5" />
+              </NavArrow>
+              <NavArrow href={nextId ? `/client/pieza/${nextId}` : null} label="Pieza siguiente">
+                <ChevronRight className="size-5" />
+              </NavArrow>
+            </div>
+          )}
+        </div>
 
         {/* Media (izquierda) + copy/decisión/comentarios (derecha) */}
         <Card>
@@ -61,8 +93,11 @@ export default async function PiezaPage({
             {/* Media (portada + archivos) */}
             <div className="flex flex-col gap-2">
               {coverUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={coverUrl} alt="Portada" className="w-full rounded-xl" />
+                <Image
+                  src={coverUrl} alt="Portada" width={0} height={0}
+                  sizes="(max-width: 768px) 100vw, 700px"
+                  className="h-auto w-full rounded-xl"
+                />
               )}
               {media.length ? (
                 <div className="grid grid-cols-2 gap-2">
@@ -70,8 +105,11 @@ export default async function PiezaPage({
                     m.media_type === "video" ? (
                       <video key={m.id} src={urls[i] ?? undefined} controls className="w-full rounded-xl" />
                     ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img key={m.id} src={urls[i] ?? undefined} alt="" className="w-full rounded-xl object-cover" />
+                      <Image
+                        key={m.id} src={urls[i] ?? ""} alt="" width={0} height={0}
+                        sizes="(max-width: 768px) 50vw, 350px"
+                        className="h-auto w-full rounded-xl object-cover"
+                      />
                     )
                   )}
                 </div>

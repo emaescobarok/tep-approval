@@ -19,8 +19,9 @@ export async function createInvitedUser(opts: {
   role: UserRole;
   clientId?: string | null;
   isAdmin?: boolean;
+  isPm?: boolean;
 }): Promise<InviteResult> {
-  const { email, fullName = null, role, clientId = null, isAdmin = false } = opts;
+  const { email, fullName = null, role, clientId = null, isAdmin = false, isPm = false } = opts;
   const admin = createAdminClient();
 
   // Intenta invitar (crea el usuario si no existe). Si el usuario ya existe,
@@ -45,6 +46,7 @@ export async function createInvitedUser(opts: {
       client_id: role === "client" ? clientId : null,
       full_name: fullName,
       is_admin: role === "agency" ? isAdmin : false,
+      is_pm: role === "agency" ? isPm : false,
     },
     { onConflict: "id" }
   );

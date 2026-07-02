@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireAgency } from "@/lib/auth";
+import { requireAgency, canManage } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { computeThumbs } from "@/lib/media";
 import { MonthSwitcher } from "@/components/month-switcher";
@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MESES, TIPO_LABEL, type Post } from "@/lib/types";
 import { NewPostForm } from "./new-post-form";
 import { InviteForm } from "./invite-form";
+import { AssignmentToggle } from "../../equipo/assignment-toggle";
 import { DeletePostButton } from "./delete-post-button";
 import { IntroEditor } from "./intro-editor";
 import { EditClientForm } from "./edit-client-form";
@@ -41,6 +42,24 @@ export default async function AgencyClientPage({
   const { data: users } = await supabase
     .from("profiles").select("id, full_name").eq("client_id", clientId);
 
+  const manager = canManage(profile);
+
+  // Estrategas de la agencia y cuáles están asignados a esta cuenta
+  // (solo se usa/renderiza para managers).
+  let strategists: { id: string; full_name: string | null }[] = [];
+  let assignedStrategistIds = new Set<string>();
+  if (manager) {
+    const { data: strat } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .eq("role", "agency").eq("is_admin", false).eq("is_pm", false)
+      .order("created_at");
+    strategists = strat ?? [];
+    const { data: asg } = await supabase
+      .from("client_assignments").select("agency_id").eq("client_id", clientId);
+    assignedStrategistIds = new Set((asg ?? []).map((a) => a.agency_id));
+  }
+
   const { data: calendar } = await supabase
     .from("calendars").select("id, intro")
     .eq("client_id", clientId).eq("month", month).eq("year", year).maybeSingle();
@@ -69,7 +88,7 @@ export default async function AgencyClientPage({
         <MonthSwitcher month={month} year={year} basePath={`/agency/clientes/${clientId}`} />
       </header>
 
-      {profile.is_admin && (
+      {canManage(profile) && (
         <div className="mx-auto flex max-w-6xl px-6 pt-4">
           <EditClientForm client={client} />
         </div>
@@ -100,40 +119,48 @@ export default async function AgencyClientPage({
                 Sin piezas. Cargá la primera desde el panel de la derecha.
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {posts.map((post) => (
-                  <Card key={post.id} className="overflow-hidden p-3">
-                    {/* Zona clickeable que abre el detalle */}
-                    <Link href={`/agency/piezas/${post.id}`} className="group block">
-                      <MediaThumb tipo={post.tipo} url={thumbs[post.id]} className="transition-opacity group-hover:opacity-90" />
-                      <div className="mt-3 flex flex-col gap-2">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <Badge>{TIPO_LABEL[post.tipo]}</Badge>
-                          {post.publish_date && (
-                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                              <CalendarDays className="size-3" /> {formatPublishDate(post.publish_date)}
-                            </span>
-                          )}
-                        </div>
-                        {post.copy && <p className="line-clamp-2 text-sm text-muted-foreground">{post.copy}</p>}
+                  <div key={post.id} className="group flex flex-col gap-1.5">
+                    {/* Imagen protagonista (clickeable, abre el detalle) */}
+                    <Link
+                      href={`/agency/piezas/${post.id}`}
+                      className="relative block aspect-[4/5] overflow-hidden rounded-xl"
+                    >
+                      <MediaThumb tipo={post.tipo} url={thumbs[post.id]} fill className="transition-transform duration-200 group-hover:scale-[1.03]" />
+                      {/* Fecha + tipo sobre la imagen */}
+                      <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-1 bg-gradient-to-b from-black/50 to-transparent p-2">
+                        <Badge className="bg-black/50 text-white backdrop-blur-sm">{TIPO_LABEL[post.tipo]}</Badge>
+                        {post.publish_date && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-white drop-shadow">
+                            <CalendarDays className="size-3" /> {formatPublishDate(post.publish_date)}
+                          </span>
+                        )}
                       </div>
                     </Link>
-                    {/* Zona no-clickeable (links/botones propios) */}
-                    <div className="mt-2 flex flex-col gap-2">
-                      {post.drive_url && (
-                        <a
-                          href={post.drive_url} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex w-fit items-center gap-1 text-xs text-primary hover:underline"
-                        >
-                          <ExternalLink className="size-3" /> Ver en Drive
-                        </a>
-                      )}
-                      <div className="flex items-center justify-between">
+
+                    {/* Meta compacta debajo */}
+                    {post.copy && (
+                      <Link href={`/agency/piezas/${post.id}`} className="line-clamp-2 text-xs leading-snug text-muted-foreground hover:text-foreground">
+                        {post.copy}
+                      </Link>
+                    )}
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="flex items-center gap-2">
                         <StatusBadge estado={post.estado} />
-                        <DeletePostButton postId={post.id} clientId={clientId} />
+                        {post.drive_url && (
+                          <a
+                            href={post.drive_url} target="_blank" rel="noopener noreferrer"
+                            title="Ver en Drive"
+                            className="inline-flex items-center gap-0.5 text-xs text-primary hover:underline"
+                          >
+                            <ExternalLink className="size-3" /> Drive
+                          </a>
+                        )}
                       </div>
+                      <DeletePostButton postId={post.id} clientId={clientId} />
                     </div>
-                  </Card>
+                  </div>
                 ))}
               </div>
             )}
@@ -171,9 +198,32 @@ export default async function AgencyClientPage({
                   <li className="text-muted-foreground">Sin usuarios todavía.</li>
                 )}
               </ul>
-              <InviteForm clientId={clientId} />
+              {manager && <InviteForm clientId={clientId} />}
             </CardContent>
           </Card>
+
+          {manager && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Estrategas en esta cuenta</CardTitle></CardHeader>
+              <CardContent className="flex flex-col gap-2">
+                <p className="text-xs text-muted-foreground">Quiénes pueden trabajar el contenido de esta cuenta:</p>
+                <div className="flex flex-wrap gap-2">
+                  {strategists.map((s) => (
+                    <AssignmentToggle
+                      key={s.id}
+                      agencyId={s.id}
+                      clientId={clientId}
+                      clientName={s.full_name ?? "Estratega"}
+                      initial={assignedStrategistIds.has(s.id)}
+                    />
+                  ))}
+                  {strategists.length === 0 && (
+                    <span className="text-sm text-muted-foreground">No hay estrategas en el equipo.</span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </aside>
       </main>
     </>

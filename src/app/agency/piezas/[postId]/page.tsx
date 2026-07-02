@@ -1,6 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink, Pencil } from "lucide-react";
+import { NavArrow } from "@/components/nav-arrow";
+import { EditPostForm } from "./edit-post-form";
 import { requireAgency } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { signedUrl } from "@/lib/media";
@@ -17,11 +20,15 @@ import { addAgencyComment } from "./actions";
 
 export default async function AgencyPiezaPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ postId: string }>;
+  searchParams: Promise<{ edit?: string }>;
 }) {
   await requireAgency();
   const { postId } = await params;
+  const { edit } = await searchParams;
+  const editing = edit === "1";
   const supabase = await createClient();
 
   const { data: post } = await supabase.from("posts").select("*").eq("id", postId).maybeSingle();
@@ -35,6 +42,18 @@ export default async function AgencyPiezaPage({
   const { data: client } = await supabase
     .from("clients").select("name").eq("id", cal!.client_id).single();
   const backHref = `/agency/clientes/${cal!.client_id}?month=${cal!.month}&year=${cal!.year}`;
+
+  // Piezas vecinas del mismo calendario, ordenadas por fecha (menor a mayor).
+  const { data: siblingRows } = await supabase
+    .from("posts")
+    .select("id, publish_date, position")
+    .eq("calendar_id", p.calendar_id)
+    .order("publish_date", { ascending: true, nullsFirst: false })
+    .order("position", { ascending: true });
+  const siblings = (siblingRows as { id: string }[]) ?? [];
+  const idx = siblings.findIndex((s) => s.id === postId);
+  const prevId = idx > 0 ? siblings[idx - 1].id : null;
+  const nextId = idx >= 0 && idx < siblings.length - 1 ? siblings[idx + 1].id : null;
 
   const { data: mediaRows } = await supabase
     .from("post_media").select("*").eq("post_id", postId).order("position");
@@ -56,18 +75,70 @@ export default async function AgencyPiezaPage({
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-6">
-        <Link href={backHref} className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-4" /> Volver al cliente
-        </Link>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <Link href={backHref} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="size-4" /> Volver al cliente
+          </Link>
+          <div className="flex items-center gap-3">
+            {!editing && (
+              <Link
+                href={`/agency/piezas/${postId}?edit=1`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-black/10 px-3 py-1.5 text-sm font-medium hover:bg-muted"
+              >
+                <Pencil className="size-4" /> Editar pieza
+              </Link>
+            )}
+            {!editing && siblings.length > 1 && (
+              <div className="flex items-center gap-1">
+                {idx >= 0 && (
+                  <span className="mr-1 text-xs text-muted-foreground">
+                    {idx + 1} de {siblings.length}
+                  </span>
+                )}
+                <NavArrow href={prevId ? `/agency/piezas/${prevId}` : null} label="Pieza anterior">
+                  <ChevronLeft className="size-5" />
+                </NavArrow>
+                <NavArrow href={nextId ? `/agency/piezas/${nextId}` : null} label="Pieza siguiente">
+                  <ChevronRight className="size-5" />
+                </NavArrow>
+              </div>
+            )}
+          </div>
+        </div>
 
-        {/* Media (izquierda) + copy/estado/comentarios (derecha) */}
+        {editing ? (
+          <Card>
+            <CardHeader><CardTitle className="text-base">Editar pieza · {TIPO_LABEL[p.tipo]}</CardTitle></CardHeader>
+            <CardContent className="p-5">
+              <EditPostForm
+                postId={postId}
+                clientId={cal!.client_id}
+                tipo={p.tipo}
+                initialCopy={p.copy ?? ""}
+                initialPublishDate={p.publish_date?.slice(0, 10) ?? ""}
+                initialDriveUrl={p.drive_url ?? ""}
+                initialMedia={media.map((m, i) => ({
+                  storagePath: m.storage_path,
+                  mediaType: m.media_type,
+                  url: urls[i] ?? "",
+                }))}
+                initialCoverPath={p.cover_path}
+                initialCoverUrl={coverUrl}
+              />
+            </CardContent>
+          </Card>
+        ) : (
+        /* Media (izquierda) + copy/estado/comentarios (derecha) */
         <Card>
           <CardContent className="grid gap-6 p-5 md:grid-cols-[1.3fr_1fr]">
             {/* Media (portada + archivos) */}
             <div className="flex flex-col gap-2">
               {coverUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={coverUrl} alt="Portada" className="w-full rounded-xl" />
+                <Image
+                  src={coverUrl} alt="Portada" width={0} height={0}
+                  sizes="(max-width: 768px) 100vw, 700px"
+                  className="h-auto w-full rounded-xl"
+                />
               )}
               {media.length ? (
                 <div className="grid grid-cols-2 gap-2">
@@ -75,8 +146,11 @@ export default async function AgencyPiezaPage({
                     m.media_type === "video" ? (
                       <video key={m.id} src={urls[i] ?? undefined} controls className="w-full rounded-xl" />
                     ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img key={m.id} src={urls[i] ?? undefined} alt="" className="w-full rounded-xl object-cover" />
+                      <Image
+                        key={m.id} src={urls[i] ?? ""} alt="" width={0} height={0}
+                        sizes="(max-width: 768px) 50vw, 350px"
+                        className="h-auto w-full rounded-xl object-cover"
+                      />
                     )
                   )}
                 </div>
@@ -139,6 +213,7 @@ export default async function AgencyPiezaPage({
             </div>
           </CardContent>
         </Card>
+        )}
       </main>
     </>
   );

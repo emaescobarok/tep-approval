@@ -7,6 +7,7 @@ import { MonthSwitcher } from "@/components/month-switcher";
 import { PostCard } from "@/components/post-card";
 import { FeedPreview } from "@/components/feed-preview";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { sanitizeIntroHtml } from "@/lib/sanitize";
 import type { Post } from "@/lib/types";
 
 export default async function CalendarioPage({
@@ -79,9 +80,10 @@ export default async function CalendarioPage({
           <Card className="mt-6">
             <CardHeader><CardTitle className="text-base">Planificación del mes</CardTitle></CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-                {calendar.intro}
-              </p>
+              <div
+                className="prose-intro text-sm leading-relaxed text-muted-foreground"
+                dangerouslySetInnerHTML={{ __html: sanitizeIntroHtml(calendar.intro) }}
+              />
             </CardContent>
           </Card>
         )}

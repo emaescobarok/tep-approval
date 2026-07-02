@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { type PostPlataforma, type PostTipo, TIPO_LABEL } from "@/lib/types";
 import { Image as ImageIcon, Film, LayoutGrid, Clock3, Type } from "lucide-react";
@@ -44,8 +45,13 @@ export function MediaThumb({
       )}
     >
       {url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={TIPO_LABEL[tipo]} className="h-full w-full object-cover" />
+        <Image
+          src={url}
+          alt={TIPO_LABEL[tipo]}
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px"
+          className="object-cover"
+        />
       ) : (
         <Icon className="size-8 text-white/90" />
       )}

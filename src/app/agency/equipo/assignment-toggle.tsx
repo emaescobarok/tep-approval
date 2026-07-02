@@ -23,7 +23,9 @@ export function AssignmentToggle({
   function toggle() {
     const next = !on;
     setOn(next);
-    startTransition(() => setAssignment(agencyId, clientId, next));
+    startTransition(() => {
+      void setAssignment(agencyId, clientId, next);
+    });
   }
 
   return (
