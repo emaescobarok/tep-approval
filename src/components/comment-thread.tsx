@@ -23,7 +23,7 @@ export function CommentThread({ comments }: { comments: Comment[] }) {
                   (isAgency ? "bg-primary/10 text-primary" : "bg-secondary text-secondary-foreground")
                 }
               >
-                {isAgency ? "tep agency" : "Cuenta"}
+                {isAgency ? "tep agency" : "Cliente"}
               </span>
               <span className="text-xs text-muted-foreground">{formatDate(c.created_at)}</span>
             </div>
