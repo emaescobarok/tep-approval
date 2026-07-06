@@ -16,6 +16,7 @@ import { NewPostForm } from "./new-post-form";
 import { InviteForm } from "./invite-form";
 import { AssignmentToggle } from "../../equipo/assignment-toggle";
 import { DeletePostButton } from "./delete-post-button";
+import { DeleteUserButton } from "./delete-user-button";
 import { IntroEditor } from "./intro-editor";
 import { EditClientForm } from "./edit-client-form";
 import { ClientLogo } from "@/components/client-logo";
@@ -195,8 +196,15 @@ export default async function AgencyClientPage({
             <CardContent className="flex flex-col gap-3">
               <ul className="flex flex-col gap-1 text-sm">
                 {(users ?? []).map((u) => (
-                  <li key={u.id} className="text-muted-foreground">
-                    {u.full_name ?? "Usuario invitado"}
+                  <li key={u.id} className="flex items-center justify-between gap-2 text-muted-foreground">
+                    <span className="truncate">{u.full_name ?? "Usuario invitado"}</span>
+                    {manager && (
+                      <DeleteUserButton
+                        clientId={clientId}
+                        userId={u.id}
+                        userName={u.full_name ?? "este usuario"}
+                      />
+                    )}
                   </li>
                 ))}
                 {(users ?? []).length === 0 && (

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAgency, requireManager } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { createInvitedUser, type InviteResult } from "@/lib/invites";
 import {
   TIPOS_CON_COPY_OBLIGATORIO,
@@ -223,4 +223,36 @@ export async function inviteClientUser(
   const res = await createInvitedUser({ email, fullName, role: "client", clientId });
   if (res.ok) revalidatePath(`/agency/clientes/${clientId}`);
   return res;
+}
+
+// Elimina un usuario CLIENTE de la cuenta indicada (cuenta de acceso + profile).
+// Solo Admin o Project Manager con acceso a la cuenta.
+export async function deleteClientUser(
+  clientId: string,
+  userId: string
+): Promise<{ ok: boolean; error?: string }> {
+  await requireManager();
+
+  // Chequeo de acceso a la cuenta (la RLS solo la devuelve si el manager la ve).
+  const supabase = await createClient();
+  const { data: client } = await supabase.from("clients").select("id").eq("id", clientId).maybeSingle();
+  if (!client) return { ok: false, error: "No tenés acceso a esta cuenta." };
+
+  // El usuario a borrar debe ser un cliente de ESTA cuenta (evita borrar a cualquiera).
+  const admin = createAdminClient();
+  const { data: target } = await admin
+    .from("profiles")
+    .select("id, role, client_id")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!target || target.role !== "client" || target.client_id !== clientId) {
+    return { ok: false, error: "Ese usuario no pertenece a esta cuenta." };
+  }
+
+  // Borra la cuenta de acceso; el profile cae por FK on delete cascade.
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath(`/agency/clientes/${clientId}`);
+  return { ok: true };
 }
