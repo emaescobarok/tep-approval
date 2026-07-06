@@ -31,7 +31,7 @@ export default async function EquipoPage() {
       <header className="sticky top-0 z-10 border-b border-border bg-background/80 px-6 py-4 backdrop-blur">
         <h1 className="text-xl font-semibold">Equipo</h1>
         <p className="text-sm text-muted-foreground">
-          Roles del equipo y a qué clientes accede cada estratega
+          Roles del equipo y a qué cuentas accede cada estratega
         </p>
       </header>
 
@@ -61,7 +61,7 @@ export default async function EquipoPage() {
                 </CardHeader>
                 {tier === "strategist" && (
                   <CardContent className="flex flex-col gap-2">
-                    <p className="text-xs text-muted-foreground">Clientes asignados:</p>
+                    <p className="text-xs text-muted-foreground">Cuentas asignadas:</p>
                     <div className="flex flex-wrap gap-2">
                       {(clients ?? []).map((c) => (
                         <AssignmentToggle
@@ -73,7 +73,7 @@ export default async function EquipoPage() {
                         />
                       ))}
                       {(clients ?? []).length === 0 && (
-                        <span className="text-sm text-muted-foreground">No hay clientes.</span>
+                        <span className="text-sm text-muted-foreground">No hay cuentas.</span>
                       )}
                     </div>
                   </CardContent>

@@ -218,7 +218,7 @@ export async function inviteClientUser(
   // Chequeo de acceso: si la RLS no devuelve el cliente, no está autorizado.
   const supabase = await createClient();
   const { data: client } = await supabase.from("clients").select("id").eq("id", clientId).maybeSingle();
-  if (!client) return { ok: false, error: "No tenés acceso a este cliente." };
+  if (!client) return { ok: false, error: "No tenés acceso a esta cuenta." };
 
   const res = await createInvitedUser({ email, fullName, role: "client", clientId });
   if (res.ok) revalidatePath(`/agency/clientes/${clientId}`);

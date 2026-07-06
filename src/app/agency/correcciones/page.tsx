@@ -29,7 +29,7 @@ export default async function CorreccionesPage() {
     const clientIds = [...new Set((cals ?? []).map((c) => c.client_id))];
     const { data: clients } = await supabase.from("clients").select("id, name").in("id", clientIds);
     const clientName = new Map((clients ?? []).map((c) => [c.id, c.name]));
-    (cals ?? []).forEach((c) => calToClient.set(c.id, clientName.get(c.client_id) ?? "Cliente"));
+    (cals ?? []).forEach((c) => calToClient.set(c.id, clientName.get(c.client_id) ?? "Cuenta"));
   }
 
   // Último comentario y miniatura por pieza
@@ -55,7 +55,7 @@ export default async function CorreccionesPage() {
       <header className="sticky top-0 z-10 border-b border-border bg-background/80 px-6 py-4 backdrop-blur">
         <h1 className="text-xl font-semibold">Bandeja de correcciones</h1>
         <p className="text-sm text-muted-foreground">
-          {posts.length} pieza(s) con cambios pedidos por los clientes
+          {posts.length} pieza(s) con cambios pedidos por las cuentas
         </p>
       </header>
 

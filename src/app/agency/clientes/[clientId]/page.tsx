@@ -186,7 +186,7 @@ export default async function AgencyClientPage({
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-base">Usuarios del cliente</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Usuarios de la cuenta</CardTitle></CardHeader>
             <CardContent className="flex flex-col gap-3">
               <ul className="flex flex-col gap-1 text-sm">
                 {(users ?? []).map((u) => (

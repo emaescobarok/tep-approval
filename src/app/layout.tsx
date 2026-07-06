@@ -12,7 +12,7 @@ const montserrat = Montserrat({
 
 export const metadata: Metadata = {
   title: "tep agency — Aprobación de contenido",
-  description: "Planificación mensual y aprobación de contenido para clientes de tep agency.",
+  description: "Planificación mensual y aprobación de contenido para cuentas de tep agency.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

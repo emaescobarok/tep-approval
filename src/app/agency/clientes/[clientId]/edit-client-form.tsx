@@ -30,7 +30,7 @@ export function EditClientForm({ client }: { client: Client }) {
   if (!open) {
     return (
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        <Pencil className="size-4" /> Editar cliente
+        <Pencil className="size-4" /> Editar cuenta
       </Button>
     );
   }
@@ -38,13 +38,13 @@ export function EditClientForm({ client }: { client: Client }) {
   return (
     <form onSubmit={onSubmit} className="flex w-full max-w-md flex-col gap-2 rounded-2xl border border-border bg-card p-4 shadow-sm">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Editar cliente</span>
+        <span className="text-sm font-medium">Editar cuenta</span>
         <button type="button" onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
           <X className="size-4" />
         </button>
       </div>
       <input
-        name="name" required defaultValue={client.name} placeholder="Nombre del cliente *"
+        name="name" required defaultValue={client.name} placeholder="Nombre de la cuenta *"
         className="h-9 rounded-lg border border-input bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
       />
       <input

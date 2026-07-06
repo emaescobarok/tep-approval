@@ -113,7 +113,7 @@ export function IntroEditor({
         />
         {empty && (
           <p className="pointer-events-none absolute left-3 top-2 text-sm text-muted-foreground">
-            Escribí la introducción de la planificación del mes (estrategia, recomendaciones, a tener en cuenta...). El cliente la ve arriba de su calendario.
+            Escribí la introducción de la planificación del mes (estrategia, recomendaciones, a tener en cuenta...). La cuenta la ve arriba de su calendario.
           </p>
         )}
       </div>

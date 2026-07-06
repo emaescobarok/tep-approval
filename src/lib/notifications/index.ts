@@ -23,17 +23,17 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
 function render(row: NotificationRow): Omit<OutboundNotification, "to"> {
   const templates: Record<NotifTipo, Omit<OutboundNotification, "to">> = {
     client_commented: {
-      subject: "Nuevo comentario de un cliente",
-      body: "Un cliente dejó un comentario en una pieza.",
+      subject: "Nuevo comentario de una cuenta",
+      body: "Una cuenta dejó un comentario en una pieza.",
       actionUrl: `${appUrl}/agency/correcciones`,
     },
     client_approved: {
-      subject: "Un cliente aprobó una pieza",
-      body: "Una pieza fue aprobada por el cliente.",
+      subject: "Una cuenta aprobó una pieza",
+      body: "Una pieza fue aprobada por la cuenta.",
       actionUrl: `${appUrl}/agency/dashboard`,
     },
     client_requested_changes: {
-      subject: "Un cliente pidió cambios",
+      subject: "Una cuenta pidió cambios",
       body: "Una pieza tiene cambios pedidos y espera revisión.",
       actionUrl: `${appUrl}/agency/correcciones`,
     },

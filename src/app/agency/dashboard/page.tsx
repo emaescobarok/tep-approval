@@ -63,7 +63,7 @@ export default async function AgencyDashboard({
         <div>
           <h1 className="text-xl font-semibold">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
-            Estado de aprobaciones por cliente · {MESES[month - 1]} {year}
+            Estado de aprobaciones por cuenta · {MESES[month - 1]} {year}
           </p>
         </div>
         <MonthSwitcher month={month} year={year} basePath="/agency/dashboard" />
@@ -109,7 +109,7 @@ export default async function AgencyDashboard({
             </div>
           ))}
           {rows.length === 0 && (
-            <p className="text-sm text-muted-foreground">No hay clientes cargados todavía.</p>
+            <p className="text-sm text-muted-foreground">No hay cuentas cargadas todavía.</p>
           )}
         </div>
       </main>

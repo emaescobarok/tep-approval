@@ -19,7 +19,7 @@ export function AddClientForm() {
     const res = await createClientAction(new FormData(e.currentTarget));
     setBusy(false);
     if (!res.ok) {
-      setError(res.error ?? "No se pudo crear el cliente.");
+      setError(res.error ?? "No se pudo crear la cuenta.");
       return;
     }
     (e.target as HTMLFormElement).reset();
@@ -30,7 +30,7 @@ export function AddClientForm() {
   if (!open) {
     return (
       <Button onClick={() => setOpen(true)}>
-        <Plus className="size-4" /> Agregar cliente
+        <Plus className="size-4" /> Agregar cuenta
       </Button>
     );
   }
@@ -41,13 +41,13 @@ export function AddClientForm() {
       className="flex w-full max-w-md flex-col gap-2 rounded-2xl border border-border bg-card p-4 shadow-sm"
     >
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Nuevo cliente</span>
+        <span className="text-sm font-medium">Nueva cuenta</span>
         <button type="button" onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
           <X className="size-4" />
         </button>
       </div>
       <input
-        name="name" required placeholder="Nombre del cliente *"
+        name="name" required placeholder="Nombre de la cuenta *"
         className="h-9 rounded-lg border border-input bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
       />
       <input
@@ -67,7 +67,7 @@ export function AddClientForm() {
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button type="submit" disabled={busy} size="sm">
-        {busy ? "Creando..." : "Crear cliente"}
+        {busy ? "Creando..." : "Crear cuenta"}
       </Button>
     </form>
   );

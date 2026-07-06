@@ -77,7 +77,7 @@ export default async function AgencyPiezaPage({
       <main className="mx-auto max-w-6xl px-6 py-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <Link href={backHref} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="size-4" /> Volver al cliente
+            <ArrowLeft className="size-4" /> Volver a la cuenta
           </Link>
           <div className="flex items-center gap-3">
             {!editing && (
@@ -198,7 +198,7 @@ export default async function AgencyPiezaPage({
                 <form action={comment} className="flex flex-col gap-2">
                   <textarea
                     name="comment" required rows={2}
-                    placeholder="Escribir un comentario para el cliente..."
+                    placeholder="Escribir un comentario para la cuenta..."
                     className="rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                   />
                   <Button type="submit" variant="outline" size="sm" className="self-end">

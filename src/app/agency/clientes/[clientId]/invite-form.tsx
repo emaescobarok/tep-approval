@@ -5,5 +5,5 @@ import { inviteClientUser } from "./actions";
 
 export function InviteForm({ clientId }: { clientId: string }) {
   const action = inviteClientUser.bind(null, clientId);
-  return <InviteBox action={action} label="Invitar usuario del cliente" />;
+  return <InviteBox action={action} label="Invitar usuario de la cuenta" />;
 }
