@@ -6,6 +6,8 @@ import { computeThumbs } from "@/lib/media";
 import { MonthSwitcher } from "@/components/month-switcher";
 import { MediaThumb } from "@/components/media-thumb";
 import { FeedPreview } from "@/components/feed-preview";
+import { MonthCalendar } from "@/components/month-calendar";
+import { ViewToggle } from "@/components/view-toggle";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +27,7 @@ export default async function AgencyClientPage({
   searchParams,
 }: {
   params: Promise<{ clientId: string }>;
-  searchParams: Promise<{ month?: string; year?: string }>;
+  searchParams: Promise<{ month?: string; year?: string; view?: string }>;
 }) {
   const profile = await requireAgency();
   const { clientId } = await params;
@@ -35,6 +37,7 @@ export default async function AgencyClientPage({
   const sp = await searchParams;
   const month = Number(sp.month) || now.getMonth() + 1;
   const year = Number(sp.year) || now.getFullYear();
+  const view = sp.view === "cal" ? "cal" : "grid";
 
   const { data: client } = await supabase.from("clients").select("*").eq("id", clientId).maybeSingle();
   if (!client) notFound();
@@ -85,7 +88,7 @@ export default async function AgencyClientPage({
             </p>
           </div>
         </div>
-        <MonthSwitcher month={month} year={year} basePath={`/agency/clientes/${clientId}`} />
+        <MonthSwitcher month={month} year={year} basePath={`/agency/clientes/${clientId}`} extraParams={{ view }} />
       </header>
 
       {canManage(profile) && (
@@ -111,13 +114,20 @@ export default async function AgencyClientPage({
           </Card>
 
           <div>
-            <h2 className="mb-3 text-sm font-medium text-muted-foreground">
-              Piezas del mes ({posts.length})
-            </h2>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="text-sm font-medium text-muted-foreground">
+                Piezas del mes ({posts.length})
+              </h2>
+              {posts.length > 0 && (
+                <ViewToggle view={view} basePath={`/agency/clientes/${clientId}`} month={month} year={year} />
+              )}
+            </div>
             {posts.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border bg-card/50 p-12 text-center text-muted-foreground">
                 Sin piezas. Cargá la primera desde el panel de la derecha.
               </div>
+            ) : view === "cal" ? (
+              <MonthCalendar posts={posts} month={month} year={year} hrefBase="/agency/piezas/" />
             ) : (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {posts.map((post) => (
@@ -139,12 +149,7 @@ export default async function AgencyClientPage({
                       </div>
                     </Link>
 
-                    {/* Meta compacta debajo */}
-                    {post.copy && (
-                      <Link href={`/agency/piezas/${post.id}`} className="line-clamp-2 text-xs leading-snug text-muted-foreground hover:text-foreground">
-                        {post.copy}
-                      </Link>
-                    )}
+                    {/* Meta compacta debajo (sin copy: aparece al abrir la pieza) */}
                     <div className="flex items-center justify-between gap-1">
                       <div className="flex items-center gap-2">
                         <StatusBadge estado={post.estado} />

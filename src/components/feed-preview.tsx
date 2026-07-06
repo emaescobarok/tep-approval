@@ -25,8 +25,10 @@ export function FeedPreview({
   // handle se acepta por compatibilidad, ya no se usa.
   handle?: string;
 }) {
-  if (posts.length === 0) return null;
-  const ordered = sortForFeed(posts);
+  // Las historias no forman parte de la grilla del perfil, no van al feed.
+  const feedPosts = posts.filter((p) => p.tipo !== "historia");
+  if (feedPosts.length === 0) return null;
+  const ordered = sortForFeed(feedPosts);
 
   return (
     <div className="mx-auto grid w-full max-w-md grid-cols-3 gap-[3px] overflow-hidden rounded-xl border border-border bg-border/40">

@@ -31,9 +31,6 @@ export function PostCard({
               </span>
             )}
           </div>
-          {post.copy && (
-            <p className="line-clamp-2 text-sm text-muted-foreground">{post.copy}</p>
-          )}
           <div className="flex items-center justify-between">
             <StatusBadge estado={post.estado} />
             {!!commentCount && (

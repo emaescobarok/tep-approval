@@ -6,6 +6,8 @@ import { ProgressSummary } from "@/components/progress-summary";
 import { MonthSwitcher } from "@/components/month-switcher";
 import { PostCard } from "@/components/post-card";
 import { FeedPreview } from "@/components/feed-preview";
+import { MonthCalendar } from "@/components/month-calendar";
+import { ViewToggle } from "@/components/view-toggle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { sanitizeIntroHtml } from "@/lib/sanitize";
 import type { Post } from "@/lib/types";
@@ -13,7 +15,7 @@ import type { Post } from "@/lib/types";
 export default async function CalendarioPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; year?: string }>;
+  searchParams: Promise<{ month?: string; year?: string; view?: string }>;
 }) {
   const profile = await requireClient();
   const supabase = await createClient();
@@ -22,6 +24,7 @@ export default async function CalendarioPage({
   const sp = await searchParams;
   const month = Number(sp.month) || now.getMonth() + 1;
   const year = Number(sp.year) || now.getFullYear();
+  const view = sp.view === "cal" ? "cal" : "grid";
 
   const { data: client } = await supabase
     .from("clients")
@@ -70,7 +73,7 @@ export default async function CalendarioPage({
         title={client?.name ?? "Mi contenido"}
         subtitle="Revisá y aprobá tus piezas del mes"
         logoUrl={client?.logo_url}
-        right={<MonthSwitcher month={month} year={year} basePath="/client/calendario" />}
+        right={<MonthSwitcher month={month} year={year} basePath="/client/calendario" extraParams={{ view }} />}
       />
       <main className="mx-auto max-w-6xl px-5 py-6">
         <ProgressSummary estados={posts.map((p) => p.estado)} />
@@ -89,23 +92,35 @@ export default async function CalendarioPage({
         )}
 
         {posts.length > 0 && (
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
-            <div className="grid h-fit grid-cols-2 gap-4 sm:grid-cols-3">
-              {posts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  href={`/client/pieza/${post.id}`}
-                  thumbUrl={thumbs[post.id]}
-                  commentCount={commentCounts[post.id]}
-                />
-              ))}
+          <>
+            <div className="mt-6 flex justify-end">
+              <ViewToggle view={view} basePath="/client/calendario" month={month} year={year} />
             </div>
-            <Card className="h-fit">
-              <CardHeader><CardTitle className="text-base">Vista previa del feed</CardTitle></CardHeader>
-              <CardContent><FeedPreview posts={posts} thumbs={thumbs} handle={client?.name ?? "cuenta"} /></CardContent>
-            </Card>
-          </div>
+
+            {view === "cal" ? (
+              <div className="mt-4">
+                <MonthCalendar posts={posts} month={month} year={year} hrefBase="/client/pieza/" />
+              </div>
+            ) : (
+              <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_320px]">
+                <div className="grid h-fit grid-cols-2 gap-4 sm:grid-cols-3">
+                  {posts.map((post) => (
+                    <PostCard
+                      key={post.id}
+                      post={post}
+                      href={`/client/pieza/${post.id}`}
+                      thumbUrl={thumbs[post.id]}
+                      commentCount={commentCounts[post.id]}
+                    />
+                  ))}
+                </div>
+                <Card className="h-fit">
+                  <CardHeader><CardTitle className="text-base">Vista previa del feed</CardTitle></CardHeader>
+                  <CardContent><FeedPreview posts={posts} thumbs={thumbs} handle={client?.name ?? "cuenta"} /></CardContent>
+                </Card>
+              </div>
+            )}
+          </>
         )}
 
         {posts.length === 0 && (
