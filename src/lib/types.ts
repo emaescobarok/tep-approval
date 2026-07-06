@@ -71,6 +71,7 @@ export interface Comment {
   author_id: string | null;
   author_role: UserRole;
   body: string;
+  mentions: string[]; // ids de profiles mencionados en el cuerpo
   created_at: string;
 }
 

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { insertCommentWithMentions } from "@/lib/mentions";
 
 // Cliente aprueba una pieza. La RLS impide tocar piezas de otro cliente.
 export async function approvePost(postId: string) {
@@ -21,10 +22,10 @@ export async function requestChanges(postId: string, formData: FormData) {
   if (!body) return;
 
   const supabase = await createClient();
-  await supabase.from("comments").insert({
-    post_id: postId,
-    author_id: profile.id,
-    author_role: "client",
+  await insertCommentWithMentions(supabase, {
+    postId,
+    authorId: profile.id,
+    authorRole: "client",
     body,
   });
   await supabase.from("posts").update({ estado: "cambios_pedidos" }).eq("id", postId);
@@ -40,10 +41,10 @@ export async function addComment(postId: string, formData: FormData) {
   if (!body) return;
 
   const supabase = await createClient();
-  await supabase.from("comments").insert({
-    post_id: postId,
-    author_id: profile.id,
-    author_role: "client",
+  await insertCommentWithMentions(supabase, {
+    postId,
+    authorId: profile.id,
+    authorRole: "client",
     body,
   });
   revalidatePath(`/client/pieza/${postId}`);

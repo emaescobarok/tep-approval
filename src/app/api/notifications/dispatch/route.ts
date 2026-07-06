@@ -33,7 +33,11 @@ export async function POST(request: NextRequest) {
   let sent = 0;
   for (const row of rows) {
     let to: string | null = null;
-    if (row.recipient_role === "agency") {
+    if (row.type === "mentioned") {
+      // La persona mencionada puede ser de agencia o de cliente: su email viaja
+      // resuelto en el payload al encolar.
+      to = (row.payload.to_email as string) ?? null;
+    } else if (row.recipient_role === "agency") {
       to = agencyEmail;
     } else if (row.client_id) {
       if (!clientEmail.has(row.client_id)) {

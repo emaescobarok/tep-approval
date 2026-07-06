@@ -9,9 +9,10 @@ import { createClient } from "@/lib/supabase/server";
 import { signedUrl } from "@/lib/media";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { CommentThread } from "@/components/comment-thread";
+import { CommentComposer } from "@/components/comment-composer";
+import { getPostParticipants } from "@/lib/mentions";
 import { DeletePostButton } from "../../clientes/[clientId]/delete-post-button";
 import { TIPO_LABEL, type Comment, type Post, type PostMedia } from "@/lib/types";
 import { formatPublishDate } from "@/lib/utils";
@@ -64,6 +65,7 @@ export default async function AgencyPiezaPage({
   const { data: commentRows } = await supabase
     .from("comments").select("*").eq("post_id", postId).order("created_at");
   const comments = (commentRows as Comment[]) ?? [];
+  const participants = await getPostParticipants(postId);
 
   const comment = addAgencyComment.bind(null, postId);
 
@@ -194,17 +196,13 @@ export default async function AgencyPiezaPage({
               {/* Comentarios en la misma columna, para aprovechar el alto */}
               <div className="mt-2 flex flex-col gap-3 border-t border-border pt-4">
                 <p className="text-sm font-medium">Comentarios</p>
-                <CommentThread comments={comments} />
-                <form action={comment} className="flex flex-col gap-2">
-                  <textarea
-                    name="comment" required rows={2}
-                    placeholder="Escribir un comentario para la cuenta..."
-                    className="rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <Button type="submit" variant="outline" size="sm" className="self-end">
-                    Comentar
-                  </Button>
-                </form>
+                <CommentThread comments={comments} participants={participants} />
+                <CommentComposer
+                  action={comment}
+                  participants={participants}
+                  placeholder="Escribir un comentario... (usá @ para mencionar)"
+                />
+                <p className="text-xs text-muted-foreground">Escribí @ para mencionar a alguien.</p>
               </div>
 
               <div className="mt-auto flex justify-end border-t border-border pt-4">

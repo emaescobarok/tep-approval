@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { CommentThread } from "@/components/comment-thread";
+import { CommentComposer } from "@/components/comment-composer";
+import { getPostParticipants } from "@/lib/mentions";
 import {
   TIPO_LABEL,
   type Comment,
@@ -57,6 +59,7 @@ export default async function PiezaPage({
   const { data: commentRows } = await supabase
     .from("comments").select("*").eq("post_id", postId).order("created_at");
   const comments = (commentRows as Comment[]) ?? [];
+  const participants = await getPostParticipants(postId);
 
   const approve = approvePost.bind(null, postId);
   const reqChanges = requestChanges.bind(null, postId);
@@ -171,17 +174,13 @@ export default async function PiezaPage({
               {/* Comentarios */}
               <div className="flex flex-col gap-3 border-t border-border pt-4">
                 <p className="text-sm font-medium">Comentarios</p>
-                <CommentThread comments={comments} />
-                <form action={comment} className="flex flex-col gap-2">
-                  <textarea
-                    name="comment" required rows={2}
-                    placeholder="Escribir un comentario..."
-                    className="rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <Button type="submit" variant="outline" size="sm" className="self-end">
-                    Comentar
-                  </Button>
-                </form>
+                <CommentThread comments={comments} participants={participants} />
+                <CommentComposer
+                  action={comment}
+                  participants={participants}
+                  placeholder="Escribir un comentario... (usá @ para mencionar)"
+                />
+                <p className="text-xs text-muted-foreground">Escribí @ para mencionar a alguien.</p>
               </div>
             </div>
           </CardContent>

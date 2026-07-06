@@ -2,7 +2,8 @@ export type NotifTipo =
   | "client_commented"
   | "client_approved"
   | "client_requested_changes"
-  | "agency_resolved";
+  | "agency_resolved"
+  | "mentioned";
 
 export interface NotificationRow {
   id: string;

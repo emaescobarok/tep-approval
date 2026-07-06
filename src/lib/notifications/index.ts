@@ -42,6 +42,15 @@ function render(row: NotificationRow): Omit<OutboundNotification, "to"> {
       body: "tep agency actualizó una pieza. Entrá a revisarla y aprobarla.",
       actionUrl: `${appUrl}/client/calendario`,
     },
+    mentioned: {
+      subject: "Te mencionaron en un comentario",
+      body: `${
+        (row.payload.author_name as string) ?? "Alguien"
+      } te mencionó en un comentario de una pieza.`,
+      actionUrl: `${appUrl}${
+        row.recipient_role === "agency" ? "/agency/piezas/" : "/client/pieza/"
+      }${row.post_id}`,
+    },
   };
   return templates[row.type];
 }
