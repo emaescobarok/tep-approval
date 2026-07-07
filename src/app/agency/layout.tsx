@@ -11,7 +11,7 @@ export default async function AgencyLayout({ children }: { children: React.React
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[240px_1fr]">
-      <aside className="hidden border-r border-sidebar-border bg-sidebar md:flex md:flex-col">
+      <aside className="hidden border-r border-sidebar-border bg-sidebar md:sticky md:top-0 md:flex md:h-screen md:flex-col">
         <div className="flex items-center justify-between gap-3 px-5 py-5">
           <div className="flex items-center gap-3">
             <Image
@@ -38,10 +38,10 @@ export default async function AgencyLayout({ children }: { children: React.React
             </NavLink>
           )}
         </nav>
-        <div className="p-3">
+        <div className="border-t border-sidebar-border p-3">
           <form action={logout}>
-            <Button variant="ghost" type="submit" className="w-full justify-start">
-              <LogOut className="size-4" /> Salir
+            <Button variant="outline" type="submit" className="w-full justify-start">
+              <LogOut className="size-4" /> Cerrar sesión
             </Button>
           </form>
         </div>

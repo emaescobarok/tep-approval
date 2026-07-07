@@ -37,8 +37,9 @@ export function Topbar({
           {right}
           <MentionsBellServer />
           <form action={logout}>
-            <Button variant="ghost" size="icon" type="submit" title="Salir">
-              <LogOut />
+            <Button variant="outline" size="sm" type="submit" title="Cerrar sesión">
+              <LogOut className="size-4" />
+              <span className="hidden sm:inline">Cerrar sesión</span>
             </Button>
           </form>
         </div>
