@@ -1,4 +1,4 @@
-import { requireAdmin, isSuperAdmin, SUPER_ADMIN_EMAIL } from "@/lib/auth";
+import { requireManager, isSuperAdmin, SUPER_ADMIN_EMAIL } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InviteBox } from "@/components/invite-box";
@@ -10,7 +10,8 @@ import { AGENCY_TIER_LABEL, agencyTier } from "@/lib/types";
 import { ShieldCheck, Briefcase } from "lucide-react";
 
 export default async function EquipoPage() {
-  const me = await requireAdmin();
+  const me = await requireManager();
+  const isAdmin = me.is_admin;
   const iAmSuper = await isSuperAdmin();
   const supabase = await createClient();
 
@@ -43,7 +44,9 @@ export default async function EquipoPage() {
       <header className="sticky top-0 z-10 border-b border-border bg-background/80 px-6 py-4 backdrop-blur">
         <h1 className="text-xl font-semibold">Equipo</h1>
         <p className="text-sm text-muted-foreground">
-          Roles del equipo y a qué cuentas accede cada estratega
+          {isAdmin
+            ? "Roles del equipo y a qué cuentas accede cada estratega"
+            : "Asigná estrategas a las cuentas que gestionás"}
         </p>
       </header>
 
@@ -76,17 +79,19 @@ export default async function EquipoPage() {
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <RoleSelect agencyId={m.id} tier={tier} locked={isSuperMember || m.id === me.id} />
-                    {canDelete && (
-                      <DeleteAgencyUserButton
-                        agencyId={m.id}
-                        userName={m.full_name ?? "este miembro"}
-                      />
-                    )}
-                  </div>
+                  {isAdmin && (
+                    <div className="flex items-center gap-2">
+                      <RoleSelect agencyId={m.id} tier={tier} locked={isSuperMember || m.id === me.id} />
+                      {canDelete && (
+                        <DeleteAgencyUserButton
+                          agencyId={m.id}
+                          userName={m.full_name ?? "este miembro"}
+                        />
+                      )}
+                    </div>
+                  )}
                 </CardHeader>
-                {(tier === "strategist" || tier === "pm") && (
+                {(tier === "strategist" || (isAdmin && tier === "pm")) && (
                   <CardContent className="flex flex-col gap-2">
                     <p className="text-xs text-muted-foreground">
                       {tier === "pm"
@@ -114,29 +119,31 @@ export default async function EquipoPage() {
           })}
         </section>
 
-        <aside className="flex flex-col gap-4">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Invitar estratega</CardTitle></CardHeader>
-            <CardContent>
-              <InviteBox
-                action={inviteStrategist}
-                label="Email del estratega"
-                cta="Invitar al equipo"
-              />
-            </CardContent>
-          </Card>
+        {isAdmin && (
+          <aside className="flex flex-col gap-4">
+            <Card>
+              <CardHeader><CardTitle className="text-base">Invitar estratega</CardTitle></CardHeader>
+              <CardContent>
+                <InviteBox
+                  action={inviteStrategist}
+                  label="Email del estratega"
+                  cta="Invitar al equipo"
+                />
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader><CardTitle className="text-base">Invitar Project Manager</CardTitle></CardHeader>
-            <CardContent>
-              <InviteBox
-                action={invitePM}
-                label="Email del Project Manager"
-                cta="Invitar como PM"
-              />
-            </CardContent>
-          </Card>
-        </aside>
+            <Card>
+              <CardHeader><CardTitle className="text-base">Invitar Project Manager</CardTitle></CardHeader>
+              <CardContent>
+                <InviteBox
+                  action={invitePM}
+                  label="Email del Project Manager"
+                  cta="Invitar como PM"
+                />
+              </CardContent>
+            </Card>
+          </aside>
+        )}
       </main>
     </>
   );

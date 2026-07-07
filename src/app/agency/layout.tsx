@@ -32,7 +32,7 @@ export default async function AgencyLayout({ children }: { children: React.React
           <NavLink href="/agency/correcciones" icon={<Inbox className="size-4" />}>
             Bandeja de correcciones
           </NavLink>
-          {profile.is_admin && (
+          {(profile.is_admin || profile.is_pm) && (
             <NavLink href="/agency/equipo" icon={<Users className="size-4" />}>
               Equipo
             </NavLink>
