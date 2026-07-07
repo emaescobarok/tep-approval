@@ -35,7 +35,8 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/login") ||
     path.startsWith("/auth") ||
     path.startsWith("/forgot-password") ||
-    path.startsWith("/reset-password");
+    path.startsWith("/reset-password") ||
+    path.startsWith("/invitacion");
 
   // Sin sesión y ruta protegida -> al login
   if (!user && !isPublic) {
