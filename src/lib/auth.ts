@@ -43,26 +43,25 @@ export async function requireProfile(): Promise<Profile> {
 export async function requireAgency(): Promise<Profile> {
   const profile = await requireProfile();
   if (profile.role !== "agency") redirect("/client/calendario");
-  return profile;
-}
 
-export async function requireAdmin(): Promise<Profile> {
-  const profile = await requireAgency();
-  if (profile.is_admin) return profile;
-
-  // El super admin SIEMPRE tiene acceso total, aunque su flag quedara en false.
-  // Además se auto-repara para que la base quede coherente.
-  if (await isSuperAdmin()) {
+  // El super admin SIEMPRE es admin: si su flag quedó en false, se auto-repara.
+  // Así nunca puede quedar afuera y ve el panel de Equipo.
+  if (!profile.is_admin && (await isSuperAdmin())) {
     const admin = createAdminClient();
     await admin
       .from("profiles")
       .update({ is_admin: true, is_pm: false })
       .eq("id", profile.id);
     profile.is_admin = true;
-    return profile;
   }
 
-  redirect("/agency/dashboard");
+  return profile;
+}
+
+export async function requireAdmin(): Promise<Profile> {
+  const profile = await requireAgency();
+  if (!profile.is_admin) redirect("/agency/dashboard");
+  return profile;
 }
 
 // ¿El usuario de agencia puede gestionar (admin o Project Manager)?
