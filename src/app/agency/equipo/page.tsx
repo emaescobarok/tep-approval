@@ -119,19 +119,19 @@ export default async function EquipoPage() {
           })}
         </section>
 
-        {isAdmin && (
-          <aside className="flex flex-col gap-4">
-            <Card>
-              <CardHeader><CardTitle className="text-base">Invitar estratega</CardTitle></CardHeader>
-              <CardContent>
-                <InviteBox
-                  action={inviteStrategist}
-                  label="Email del estratega"
-                  cta="Invitar al equipo"
-                />
-              </CardContent>
-            </Card>
+        <aside className="flex flex-col gap-4">
+          <Card>
+            <CardHeader><CardTitle className="text-base">Invitar estratega</CardTitle></CardHeader>
+            <CardContent>
+              <InviteBox
+                action={inviteStrategist}
+                label="Email del estratega"
+                cta="Invitar al equipo"
+              />
+            </CardContent>
+          </Card>
 
+          {isAdmin && (
             <Card>
               <CardHeader><CardTitle className="text-base">Invitar Project Manager</CardTitle></CardHeader>
               <CardContent>
@@ -142,8 +142,8 @@ export default async function EquipoPage() {
                 />
               </CardContent>
             </Card>
-          </aside>
-        )}
+          )}
+        </aside>
       </main>
     </>
   );

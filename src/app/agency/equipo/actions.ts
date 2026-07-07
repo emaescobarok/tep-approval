@@ -11,9 +11,10 @@ import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { createInvitedUser, type InviteResult } from "@/lib/invites";
 import type { AgencyTier } from "@/lib/types";
 
-// Invita a un estratega (usuario role='agency', sin permisos de gestión). Solo admin.
+// Invita a un estratega (usuario role='agency', sin permisos de gestión).
+// Admin o PM (el PM arma su equipo de estrategas).
 export async function inviteStrategist(formData: FormData): Promise<InviteResult> {
-  await requireAdmin();
+  await requireManager();
   const email = String(formData.get("email") || "").trim();
   const fullName = String(formData.get("full_name") || "").trim();
   if (!email) return { ok: false, error: "Falta el email." };
