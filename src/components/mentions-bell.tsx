@@ -71,9 +71,10 @@ export function MentionsBell({
           <div
             className={
               "absolute z-40 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-lg " +
-              // Agencia (sidebar): se despliega hacia la derecha, sobre el contenido.
-              // Cliente (topbar): se despliega hacia la izquierda.
-              (placement === "sidebar" ? "left-0" : "right-0")
+              // Agencia (sidebar): en escritorio abre hacia la derecha (md:left-0);
+              // en móvil abre hacia la izquierda para no salirse (right-0).
+              // Cliente (topbar): siempre hacia la izquierda.
+              (placement === "sidebar" ? "right-0 md:left-0" : "right-0")
             }
           >
             <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">

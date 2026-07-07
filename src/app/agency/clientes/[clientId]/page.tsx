@@ -79,7 +79,7 @@ export default async function AgencyClientPage({
 
   return (
     <>
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/80 px-6 py-4 backdrop-blur">
+      <header className="md:sticky md:top-0 z-10 flex items-center justify-between border-b border-border bg-background/80 px-6 py-4 backdrop-blur">
         <div className="flex items-center gap-3">
           <ClientLogo name={client.name} logoUrl={client.logo_url} className="size-11" />
           <div>

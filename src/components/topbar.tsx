@@ -16,7 +16,7 @@ export function Topbar({
 }) {
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4">
         <div className="flex items-center gap-3">
           {logoUrl ? (
             <div className="size-9 overflow-hidden rounded-lg border border-border">

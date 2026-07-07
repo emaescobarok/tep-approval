@@ -71,7 +71,7 @@ export default async function AgencyPiezaPage({
 
   return (
     <>
-      <header className="sticky top-0 z-10 border-b border-border bg-background/80 px-6 py-4 backdrop-blur">
+      <header className="md:sticky md:top-0 z-10 border-b border-border bg-background/80 px-6 py-4 backdrop-blur">
         <h1 className="text-xl font-semibold">{client?.name}</h1>
         <p className="text-sm text-muted-foreground">Detalle de pieza · {TIPO_LABEL[p.tipo]}</p>
       </header>

@@ -4,6 +4,7 @@ import { requireAgency } from "@/lib/auth";
 import { logout } from "@/app/login/actions";
 import { Button } from "@/components/ui/button";
 import { MentionsBellServer } from "@/components/mentions-bell-server";
+import { AgencyMobileNav } from "./mobile-nav";
 import { LayoutDashboard, Inbox, Users, LogOut } from "lucide-react";
 
 export default async function AgencyLayout({ children }: { children: React.ReactNode }) {
@@ -11,6 +12,10 @@ export default async function AgencyLayout({ children }: { children: React.React
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[240px_1fr]">
+      <AgencyMobileNav
+        isManager={profile.is_admin || profile.is_pm}
+        bell={<MentionsBellServer />}
+      />
       <aside className="hidden border-r border-sidebar-border bg-sidebar md:sticky md:top-0 md:z-30 md:flex md:h-screen md:flex-col">
         <div className="flex items-center justify-between gap-3 px-5 py-5">
           <div className="flex items-center gap-3">

@@ -51,7 +51,8 @@ export function MonthCalendar({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-7 gap-px overflow-hidden rounded-xl border border-border bg-border">
+      <div className="-mx-1 overflow-x-auto px-1">
+      <div className="grid min-w-[560px] grid-cols-7 gap-px overflow-hidden rounded-xl border border-border bg-border">
         {WEEKDAYS.map((w) => (
           <div
             key={w}
@@ -88,6 +89,7 @@ export function MonthCalendar({
             )}
           </div>
         ))}
+      </div>
       </div>
 
       {undated.length > 0 && (
