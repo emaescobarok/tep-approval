@@ -65,17 +65,12 @@ export default async function EquipoPage() {
                     </CardTitle>
                     {tier === "admin" && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                        <ShieldCheck className="size-3.5" /> Admin — ve todo
+                        <ShieldCheck className="size-3.5" /> Administrador
                       </span>
                     )}
                     {tier === "pm" && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent">
                         <Briefcase className="size-3.5" /> Project Manager
-                      </span>
-                    )}
-                    {isSuperMember && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                        <ShieldCheck className="size-3.5" /> Super admin
                       </span>
                     )}
                   </div>
