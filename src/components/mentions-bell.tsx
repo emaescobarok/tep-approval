@@ -38,14 +38,14 @@ export function MentionsBell({
   const router = useRouter();
 
   function toggle() {
-    const next = !open;
-    setOpen(next);
-    if (next && unread > 0) {
-      startTransition(async () => {
-        await markMentionsSeen();
-        router.refresh();
-      });
-    }
+    setOpen((o) => !o);
+  }
+
+  function clear() {
+    startTransition(async () => {
+      await markMentionsSeen();
+      router.refresh();
+    });
   }
 
   return (
@@ -76,8 +76,17 @@ export function MentionsBell({
               (placement === "sidebar" ? "left-0" : "right-0")
             }
           >
-            <div className="border-b border-border px-3 py-2 text-sm font-medium">
-              Menciones
+            <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
+              <span className="text-sm font-medium">Menciones</span>
+              {items.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clear}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                >
+                  Limpiar
+                </button>
+              )}
             </div>
             {items.length === 0 ? (
               <p className="px-3 py-6 text-center text-sm text-muted-foreground">

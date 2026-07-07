@@ -141,10 +141,13 @@ export async function getMyMentions(
   seenAt: string | null
 ): Promise<{ items: MentionItem[]; unread: number }> {
   const supabase = await createClient();
-  const { data: rows } = await supabase
+  let query = supabase
     .from("comments")
     .select("id, post_id, body, author_id, created_at")
-    .contains("mentions", [userId])
+    .contains("mentions", [userId]);
+  // Solo las menciones posteriores a la última "limpieza" (mentions_seen_at).
+  if (seenAt) query = query.gt("created_at", seenAt);
+  const { data: rows } = await query
     .order("created_at", { ascending: false })
     .limit(15);
 
@@ -207,9 +210,6 @@ export async function getMyMentions(
     };
   });
 
-  const unread = seenAt
-    ? items.filter((i) => i.createdAt > seenAt).length
-    : items.length;
-
-  return { items, unread };
+  // La lista ya viene filtrada a lo no leído, así que todo lo mostrado es "unread".
+  return { items, unread: items.length };
 }
