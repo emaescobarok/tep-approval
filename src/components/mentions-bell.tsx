@@ -24,10 +24,12 @@ export function MentionsBell({
   items,
   unread,
   hrefBase,
+  align = "right",
 }: {
   items: MentionItem[];
   unread: number;
   hrefBase: string;
+  align?: "left" | "right";
 }) {
   const [open, setOpen] = useState(false);
   const [, startTransition] = useTransition();
@@ -64,7 +66,12 @@ export function MentionsBell({
         <>
           {/* Click-away */}
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-40 mt-2 w-80 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
+          <div
+            className={
+              "absolute z-40 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-lg " +
+              (align === "left" ? "left-0" : "right-0")
+            }
+          >
             <div className="border-b border-border px-3 py-2 text-sm font-medium">
               Menciones
             </div>
