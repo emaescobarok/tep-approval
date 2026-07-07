@@ -9,10 +9,12 @@ export interface InviteResult {
   error?: string;
 }
 
-// Crea (o reutiliza) un usuario invitado, le asigna su profile y devuelve un
-// link de invitación. Si hay RESEND configurado, además manda el email.
-// Usa service_role (salta RLS): la autorización se valida en la Server Action
-// que la llama (agency_can_access / is_admin).
+// Crea (o reutiliza) un usuario invitado, le asigna su profile y hace que
+// Supabase le envíe el email para definir su contraseña.
+//  - Usuario nuevo  -> inviteUserByEmail (crea + envía invitación).
+//  - Usuario existe -> resetPasswordForEmail (envía link para definir clave).
+// Si el envío fallara, se devuelve un link de respaldo para compartir a mano.
+// Usa service_role (salta RLS): la autorización se valida en la Server Action.
 export async function createInvitedUser(opts: {
   email: string;
   fullName?: string | null;
@@ -23,25 +25,37 @@ export async function createInvitedUser(opts: {
 }): Promise<InviteResult> {
   const { email, fullName = null, role, clientId = null, isAdmin = false, isPm = false } = opts;
   const admin = createAdminClient();
+  const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`;
 
-  // Intenta invitar (crea el usuario si no existe). Si el usuario ya existe,
-  // cae a un link de tipo 'recovery' que también permite definir la contraseña.
-  let linkType: "invite" | "recovery" = "invite";
-  let { data, error } = await admin.auth.admin.generateLink({ type: "invite", email });
+  let userId: string | null = null;
+  let emailed = false;
 
-  if (error || !data?.user) {
-    linkType = "recovery";
-    ({ data, error } = await admin.auth.admin.generateLink({ type: "recovery", email }));
+  // 1) Intento de invitación (usuario nuevo): crea el usuario y envía el email.
+  const invite = await admin.auth.admin.inviteUserByEmail(email, { redirectTo });
+  if (!invite.error && invite.data?.user) {
+    userId = invite.data.user.id;
+    emailed = true;
+  } else {
+    // 2) El usuario ya existe: obtenemos su id y le mandamos un link de recovery
+    //    (sirve para definir/redefinir la contraseña).
+    const link = await admin.auth.admin.generateLink({ type: "recovery", email });
+    if (link.error || !link.data?.user) {
+      return {
+        ok: false,
+        error: link.error?.message ?? invite.error?.message ?? "No se pudo invitar.",
+      };
+    }
+    userId = link.data.user.id;
+    const reset = await admin.auth.resetPasswordForEmail(email, { redirectTo });
+    emailed = !reset.error;
   }
 
-  if (error || !data?.user) {
-    return { ok: false, error: error?.message ?? "No se pudo generar la invitación." };
-  }
+  if (!userId) return { ok: false, error: "No se pudo crear el usuario." };
 
   // Crea el profile (idempotente ante reintentos).
   const { error: profErr } = await admin.from("profiles").upsert(
     {
-      id: data.user.id,
+      id: userId,
       role,
       client_id: role === "client" ? clientId : null,
       full_name: fullName,
@@ -52,39 +66,15 @@ export async function createInvitedUser(opts: {
   );
   if (profErr) return { ok: false, error: profErr.message };
 
-  // Link propio hacia nuestro callback, que verifica el token_hash con verifyOtp.
-  const tokenHash = data.properties?.hashed_token;
-  const link = tokenHash
-    ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?token_hash=${tokenHash}&type=${linkType}&next=/reset-password`
-    : undefined;
-
-  // Envío por email (opcional, vía Resend). No bloquea si falla.
-  let emailed = false;
-  if (link && process.env.RESEND_API_KEY && process.env.NOTIFICATIONS_FROM_EMAIL) {
-    try {
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: process.env.NOTIFICATIONS_FROM_EMAIL,
-          to: email,
-          subject:
-            role === "agency"
-              ? "Te invitaron a tep agency (equipo)"
-              : "Te invitaron a revisar tu contenido — tep agency",
-          html: `<p>Hola${fullName ? " " + fullName : ""},</p>
-                 <p>Te crearon una cuenta en la plataforma de tep agency.</p>
-                 <p><a href="${link}">Hacé clic acá para definir tu contraseña y entrar</a></p>`,
-        }),
-      });
-      emailed = res.ok;
-    } catch {
-      emailed = false;
-    }
+  // Respaldo: si el email no pudo enviarse, devolvemos un link para compartir.
+  let link: string | undefined;
+  if (!emailed) {
+    const gl = await admin.auth.admin.generateLink({ type: "recovery", email });
+    const tokenHash = gl.data?.properties?.hashed_token;
+    link = tokenHash
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?token_hash=${tokenHash}&type=recovery&next=/reset-password`
+      : undefined;
   }
 
-  return { ok: true, link, emailed };
+  return { ok: true, emailed, link };
 }

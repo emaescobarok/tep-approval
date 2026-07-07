@@ -64,6 +64,13 @@ export function InviteBox({
         <p className="text-sm text-destructive">{result.error}</p>
       )}
 
+      {result?.ok && result.emailed && !result.link && (
+        <p className="rounded-lg bg-secondary/60 p-3 text-xs text-muted-foreground">
+          ✅ Invitación enviada por email. La persona va a recibir un link para
+          definir su contraseña y entrar.
+        </p>
+      )}
+
       {result?.ok && result.link && (
         <div className="flex flex-col gap-2 rounded-lg bg-secondary/60 p-3">
           <p className="text-xs text-muted-foreground">
