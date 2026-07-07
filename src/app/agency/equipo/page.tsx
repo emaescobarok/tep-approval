@@ -2,7 +2,7 @@ import { requireManager, isSuperAdmin, SUPER_ADMIN_EMAIL } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InviteBox } from "@/components/invite-box";
-import { AssignmentToggle } from "./assignment-toggle";
+import { AssignmentPicker } from "./assignment-picker";
 import { RoleSelect } from "./role-select";
 import { DeleteAgencyUserButton } from "./delete-agency-user-button";
 import { inviteStrategist, invitePM } from "./actions";
@@ -93,20 +93,13 @@ export default async function EquipoPage() {
                         ? "Cuentas que gestiona (asignale las que va a manejar):"
                         : "Cuentas asignadas:"}
                     </p>
-                    <div className="flex flex-wrap gap-2">
-                      {(clients ?? []).map((c) => (
-                        <AssignmentToggle
-                          key={c.id}
-                          agencyId={m.id}
-                          clientId={c.id}
-                          clientName={c.name}
-                          initial={assignedSet.has(`${m.id}:${c.id}`)}
-                        />
-                      ))}
-                      {(clients ?? []).length === 0 && (
-                        <span className="text-sm text-muted-foreground">No hay cuentas.</span>
-                      )}
-                    </div>
+                    <AssignmentPicker
+                      agencyId={m.id}
+                      clients={clients ?? []}
+                      assignedIds={(clients ?? [])
+                        .filter((c) => assignedSet.has(`${m.id}:${c.id}`))
+                        .map((c) => c.id)}
+                    />
                   </CardContent>
                 )}
               </Card>
