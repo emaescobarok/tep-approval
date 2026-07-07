@@ -9,14 +9,14 @@ export async function MentionsBellServer() {
   const { items, unread } = await getMyMentions(profile.id, profile.mentions_seen_at);
   const isAgency = profile.role === "agency";
   const hrefBase = isAgency ? "/agency/piezas/" : "/client/pieza/";
-  // En agencia la campana vive en el sidebar angosto: el panel abre hacia la
-  // derecha para no salirse de pantalla. En cliente (topbar) abre a la izquierda.
+  // Agencia: campana en el sidebar -> panel acotado, cae sobre el menú.
+  // Cliente: campana en el topbar -> panel ancho.
   return (
     <MentionsBell
       items={items}
       unread={unread}
       hrefBase={hrefBase}
-      align={isAgency ? "left" : "right"}
+      placement={isAgency ? "sidebar" : "topbar"}
     />
   );
 }

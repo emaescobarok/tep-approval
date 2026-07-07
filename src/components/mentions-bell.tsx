@@ -24,12 +24,14 @@ export function MentionsBell({
   items,
   unread,
   hrefBase,
-  align = "right",
+  placement = "topbar",
 }: {
   items: MentionItem[];
   unread: number;
   hrefBase: string;
-  align?: "left" | "right";
+  // topbar: panel ancho alineado a la derecha (cliente).
+  // sidebar: panel acotado al ancho del menú para no tapar el contenido (agencia).
+  placement?: "topbar" | "sidebar";
 }) {
   const [open, setOpen] = useState(false);
   const [, startTransition] = useTransition();
@@ -68,8 +70,10 @@ export function MentionsBell({
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
           <div
             className={
-              "absolute z-40 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-lg " +
-              (align === "left" ? "left-0" : "right-0")
+              "absolute right-0 z-40 mt-2 overflow-hidden rounded-xl border border-border bg-card shadow-lg " +
+              (placement === "sidebar"
+                ? "w-56 max-w-[calc(100vw-1rem)]"
+                : "w-80 max-w-[calc(100vw-2rem)]")
             }
           >
             <div className="border-b border-border px-3 py-2 text-sm font-medium">
