@@ -23,6 +23,7 @@ export interface Profile {
   full_name: string | null;
   is_admin: boolean;
   is_pm: boolean;
+  mentions_seen_at: string | null;
   created_at: string;
 }
 

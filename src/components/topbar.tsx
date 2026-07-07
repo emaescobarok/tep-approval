@@ -1,5 +1,6 @@
 import { logout } from "@/app/login/actions";
 import { Button } from "@/components/ui/button";
+import { MentionsBellServer } from "@/components/mentions-bell-server";
 import { LogOut } from "lucide-react";
 
 export function Topbar({
@@ -34,6 +35,7 @@ export function Topbar({
         </div>
         <div className="flex items-center gap-2">
           {right}
+          <MentionsBellServer />
           <form action={logout}>
             <Button variant="ghost" size="icon" type="submit" title="Salir">
               <LogOut />

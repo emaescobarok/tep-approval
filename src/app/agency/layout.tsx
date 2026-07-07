@@ -3,6 +3,7 @@ import Image from "next/image";
 import { requireAgency } from "@/lib/auth";
 import { logout } from "@/app/login/actions";
 import { Button } from "@/components/ui/button";
+import { MentionsBellServer } from "@/components/mentions-bell-server";
 import { LayoutDashboard, Inbox, Users, LogOut } from "lucide-react";
 
 export default async function AgencyLayout({ children }: { children: React.ReactNode }) {
@@ -11,15 +12,18 @@ export default async function AgencyLayout({ children }: { children: React.React
   return (
     <div className="min-h-screen md:grid md:grid-cols-[240px_1fr]">
       <aside className="hidden border-r border-sidebar-border bg-sidebar md:flex md:flex-col">
-        <div className="flex items-center gap-3 px-5 py-5">
-          <Image
-            src="/logo.jpg"
-            alt="tep agency"
-            width={36}
-            height={36}
-            className="size-9 rounded-lg object-cover"
-          />
-          <span className="font-semibold">tep agency</span>
+        <div className="flex items-center justify-between gap-3 px-5 py-5">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/logo.jpg"
+              alt="tep agency"
+              width={36}
+              height={36}
+              className="size-9 rounded-lg object-cover"
+            />
+            <span className="font-semibold">tep agency</span>
+          </div>
+          <MentionsBellServer />
         </div>
         <nav className="flex flex-1 flex-col gap-1 px-3">
           <NavLink href="/agency/dashboard" icon={<LayoutDashboard className="size-4" />}>

@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createAdminClient } from "@/lib/supabase/server";
-import type { UserRole } from "@/lib/types";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { TIPO_LABEL, type PostTipo, type UserRole } from "@/lib/types";
 
 export interface Participant {
   id: string;
@@ -123,4 +123,93 @@ export async function insertCommentWithMentions(
     });
   }
   if (rows.length) await admin.from("notifications").insert(rows);
+}
+
+export interface MentionItem {
+  id: string;
+  postId: string;
+  preview: string;
+  author: string;
+  context: string; // "Cuenta · Tipo"
+  createdAt: string;
+}
+
+// Menciones al usuario actual (para el panel in-app). La lista base respeta la
+// RLS (createClient); los nombres de autor/cuenta se completan con service_role.
+export async function getMyMentions(
+  userId: string,
+  seenAt: string | null
+): Promise<{ items: MentionItem[]; unread: number }> {
+  const supabase = await createClient();
+  const { data: rows } = await supabase
+    .from("comments")
+    .select("id, post_id, body, author_id, created_at")
+    .contains("mentions", [userId])
+    .order("created_at", { ascending: false })
+    .limit(15);
+
+  const list = (rows ?? []) as {
+    id: string;
+    post_id: string;
+    body: string;
+    author_id: string | null;
+    created_at: string;
+  }[];
+  if (list.length === 0) return { items: [], unread: 0 };
+
+  const admin = createAdminClient();
+
+  const authorIds = [...new Set(list.map((r) => r.author_id).filter(Boolean))] as string[];
+  const postIds = [...new Set(list.map((r) => r.post_id))];
+
+  const { data: profs } = authorIds.length
+    ? await admin.from("profiles").select("id, full_name").in("id", authorIds)
+    : { data: [] as { id: string; full_name: string | null }[] };
+  const profList = (profs ?? []) as { id: string; full_name: string | null }[];
+  const nameById = new Map(profList.map((p) => [p.id, p.full_name]));
+
+  const { data: posts } = await admin
+    .from("posts").select("id, tipo, calendar_id").in("id", postIds);
+  const postList = (posts ?? []) as { id: string; tipo: PostTipo; calendar_id: string }[];
+
+  const calIds = [...new Set(postList.map((p) => p.calendar_id))];
+  const { data: cals } = await admin
+    .from("calendars").select("id, client_id").in("id", calIds);
+  const calList = (cals ?? []) as { id: string; client_id: string }[];
+  const clientIdByCal = new Map(calList.map((c) => [c.id, c.client_id]));
+
+  const clientIds = [...new Set(calList.map((c) => c.client_id))];
+  const { data: clients } = clientIds.length
+    ? await admin.from("clients").select("id, name").in("id", clientIds)
+    : { data: [] as { id: string; name: string }[] };
+  const clientList = (clients ?? []) as { id: string; name: string }[];
+  const clientNameById = new Map(clientList.map((c) => [c.id, c.name]));
+
+  const postCtx = new Map(
+    postList.map((p) => [
+      p.id,
+      {
+        tipo: p.tipo,
+        clientName: clientNameById.get(clientIdByCal.get(p.calendar_id) ?? "") ?? "Cuenta",
+      },
+    ])
+  );
+
+  const items: MentionItem[] = list.map((r) => {
+    const ctx = postCtx.get(r.post_id);
+    return {
+      id: r.id,
+      postId: r.post_id,
+      preview: r.body.length > 120 ? r.body.slice(0, 120) + "…" : r.body,
+      author: nameById.get(r.author_id ?? "") ?? "Alguien",
+      context: ctx ? `${ctx.clientName} · ${TIPO_LABEL[ctx.tipo]}` : "",
+      createdAt: r.created_at,
+    };
+  });
+
+  const unread = seenAt
+    ? items.filter((i) => i.createdAt > seenAt).length
+    : items.length;
+
+  return { items, unread };
 }
