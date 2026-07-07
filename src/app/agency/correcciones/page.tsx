@@ -1,11 +1,11 @@
 import { requireAgency } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { signedUrl } from "@/lib/media";
+import { computeThumbs } from "@/lib/media";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MediaThumb } from "@/components/media-thumb";
 import { ResolveButton } from "./resolve-button";
-import { TIPO_LABEL, type Post, type PostMedia } from "@/lib/types";
+import { TIPO_LABEL, type Post } from "@/lib/types";
 
 export default async function CorreccionesPage() {
   await requireAgency();
@@ -32,9 +32,8 @@ export default async function CorreccionesPage() {
     (cals ?? []).forEach((c) => calToClient.set(c.id, clientName.get(c.client_id) ?? "Cliente"));
   }
 
-  // Último comentario y miniatura por pieza
+  // Último comentario por pieza
   const lastComment: Record<string, string> = {};
-  const thumbs: Record<string, string | null> = {};
   if (ids.length) {
     const { data: comments } = await supabase
       .from("comments").select("post_id, body, created_at")
@@ -42,13 +41,10 @@ export default async function CorreccionesPage() {
     (comments ?? []).forEach((c) => {
       if (!lastComment[c.post_id]) lastComment[c.post_id] = c.body;
     });
-
-    const { data: media } = await supabase
-      .from("post_media").select("*").in("post_id", ids).order("position");
-    const first: Record<string, PostMedia> = {};
-    (media as PostMedia[] | null)?.forEach((m) => { if (!first[m.post_id]) first[m.post_id] = m; });
-    for (const pid of Object.keys(first)) thumbs[pid] = await signedUrl(supabase, first[pid].storage_path);
   }
+
+  // Miniatura por pieza (portada del reel o primera media), igual que el calendario.
+  const thumbs = await computeThumbs(supabase, posts);
 
   return (
     <>
