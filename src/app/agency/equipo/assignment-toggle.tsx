@@ -23,8 +23,12 @@ export function AssignmentToggle({
   function toggle() {
     const next = !on;
     setOn(next);
-    startTransition(() => {
-      void setAssignment(agencyId, clientId, next);
+    startTransition(async () => {
+      const res = await setAssignment(agencyId, clientId, next);
+      if (!res.ok) {
+        setOn(!next); // revierte si el servidor rechazó
+        if (res.error) alert(res.error);
+      }
     });
   }
 

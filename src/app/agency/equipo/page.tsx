@@ -86,9 +86,13 @@ export default async function EquipoPage() {
                     )}
                   </div>
                 </CardHeader>
-                {tier === "strategist" && (
+                {(tier === "strategist" || tier === "pm") && (
                   <CardContent className="flex flex-col gap-2">
-                    <p className="text-xs text-muted-foreground">Cuentas asignadas:</p>
+                    <p className="text-xs text-muted-foreground">
+                      {tier === "pm"
+                        ? "Cuentas que gestiona (asignale las que va a manejar):"
+                        : "Cuentas asignadas:"}
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {(clients ?? []).map((c) => (
                         <AssignmentToggle
