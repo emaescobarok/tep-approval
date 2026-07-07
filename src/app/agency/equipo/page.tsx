@@ -1,15 +1,17 @@
-import { requireAdmin } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin, isSuperAdmin, SUPER_ADMIN_EMAIL } from "@/lib/auth";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InviteBox } from "@/components/invite-box";
 import { AssignmentToggle } from "./assignment-toggle";
 import { RoleSelect } from "./role-select";
+import { DeleteAgencyUserButton } from "./delete-agency-user-button";
 import { inviteStrategist, invitePM } from "./actions";
 import { AGENCY_TIER_LABEL, agencyTier } from "@/lib/types";
 import { ShieldCheck, Briefcase } from "lucide-react";
 
 export default async function EquipoPage() {
-  await requireAdmin();
+  const me = await requireAdmin();
+  const iAmSuper = await isSuperAdmin();
   const supabase = await createClient();
 
   const { data: members } = await supabase
@@ -17,6 +19,16 @@ export default async function EquipoPage() {
     .select("id, full_name, is_admin, is_pm")
     .eq("role", "agency")
     .order("created_at");
+
+  // Email de cada miembro (vive en auth.users) para identificar al super admin.
+  const admin = createAdminClient();
+  const emailById = new Map<string, string>();
+  await Promise.all(
+    (members ?? []).map(async (m) => {
+      const { data } = await admin.auth.admin.getUserById(m.id);
+      if (data?.user?.email) emailById.set(m.id, data.user.email.toLowerCase());
+    })
+  );
 
   const { data: clients } = await supabase.from("clients").select("id, name").order("name");
 
@@ -39,6 +51,8 @@ export default async function EquipoPage() {
         <section className="flex flex-col gap-4">
           {(members ?? []).map((m) => {
             const tier = agencyTier(m);
+            const isSuperMember = emailById.get(m.id) === SUPER_ADMIN_EMAIL;
+            const canDelete = iAmSuper && !isSuperMember && m.id !== me.id;
             return (
               <Card key={m.id}>
                 <CardHeader className="flex-row items-center justify-between">
@@ -56,8 +70,21 @@ export default async function EquipoPage() {
                         <Briefcase className="size-3.5" /> Project Manager
                       </span>
                     )}
+                    {isSuperMember && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                        <ShieldCheck className="size-3.5" /> Super admin
+                      </span>
+                    )}
                   </div>
-                  <RoleSelect agencyId={m.id} tier={tier} />
+                  <div className="flex items-center gap-2">
+                    <RoleSelect agencyId={m.id} tier={tier} locked={isSuperMember} />
+                    {canDelete && (
+                      <DeleteAgencyUserButton
+                        agencyId={m.id}
+                        userName={m.full_name ?? "este miembro"}
+                      />
+                    )}
+                  </div>
                 </CardHeader>
                 {tier === "strategist" && (
                   <CardContent className="flex flex-col gap-2">

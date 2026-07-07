@@ -1,7 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin, requireManager } from "@/lib/auth";
+import {
+  requireAdmin,
+  requireManager,
+  requireSuperAdmin,
+  SUPER_ADMIN_EMAIL,
+} from "@/lib/auth";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { createInvitedUser, type InviteResult } from "@/lib/invites";
 import type { AgencyTier } from "@/lib/types";
@@ -40,6 +45,11 @@ export async function setAgencyRole(
   const admin = createAdminClient();
 
   if (tier !== "admin") {
+    // El super admin no se puede degradar.
+    const { data: targetUser } = await admin.auth.admin.getUserById(agencyId);
+    if (targetUser?.user?.email?.toLowerCase() === SUPER_ADMIN_EMAIL) {
+      return { ok: false, error: "No se puede cambiar el rol del super admin." };
+    }
     // ¿El objetivo es admin hoy y sería el último? No permitir degradarlo.
     const { data: target } = await admin
       .from("profiles").select("is_admin").eq("id", agencyId).maybeSingle();
@@ -60,6 +70,36 @@ export async function setAgencyRole(
     .update({ is_admin: tier === "admin", is_pm: tier === "pm" })
     .eq("id", agencyId)
     .eq("role", "agency");
+  revalidatePath("/agency/equipo");
+  return { ok: true };
+}
+
+// Elimina un miembro del equipo (usuario de agencia). Solo el super admin.
+// No se puede eliminar a sí mismo ni al super admin.
+export async function deleteAgencyUser(
+  agencyId: string
+): Promise<{ ok: boolean; error?: string }> {
+  const me = await requireSuperAdmin();
+  if (agencyId === me.id) {
+    return { ok: false, error: "No podés eliminarte a vos mismo." };
+  }
+
+  const admin = createAdminClient();
+
+  const { data: target } = await admin
+    .from("profiles").select("id, role").eq("id", agencyId).maybeSingle();
+  if (!target || target.role !== "agency") {
+    return { ok: false, error: "Ese usuario no es del equipo." };
+  }
+
+  const { data: targetUser } = await admin.auth.admin.getUserById(agencyId);
+  if (targetUser?.user?.email?.toLowerCase() === SUPER_ADMIN_EMAIL) {
+    return { ok: false, error: "No se puede eliminar al super admin." };
+  }
+
+  const { error } = await admin.auth.admin.deleteUser(agencyId);
+  if (error) return { ok: false, error: error.message };
+
   revalidatePath("/agency/equipo");
   return { ok: true };
 }

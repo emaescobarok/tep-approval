@@ -2,6 +2,25 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/types";
 
+// Super admin: el dueño de la plataforma. No se puede eliminar ni degradar, y
+// es el único que puede eliminar miembros del equipo. Configurable por env.
+export const SUPER_ADMIN_EMAIL = (
+  process.env.SUPER_ADMIN_EMAIL ?? "emaescobar.rp@gmail.com"
+).toLowerCase();
+
+// Email del usuario logueado (o null). El email vive en auth.users, no en profiles.
+export async function getAuthEmail(): Promise<string | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user?.email?.toLowerCase() ?? null;
+}
+
+export async function isSuperAdmin(): Promise<boolean> {
+  return (await getAuthEmail()) === SUPER_ADMIN_EMAIL;
+}
+
 // Devuelve el profile del usuario logueado o redirige al login.
 export async function requireProfile(): Promise<Profile> {
   const supabase = await createClient();
@@ -42,6 +61,12 @@ export function canManage(profile: Pick<Profile, "is_admin" | "is_pm">): boolean
 export async function requireManager(): Promise<Profile> {
   const profile = await requireAgency();
   if (!canManage(profile)) redirect("/agency/dashboard");
+  return profile;
+}
+
+export async function requireSuperAdmin(): Promise<Profile> {
+  const profile = await requireAdmin();
+  if (!(await isSuperAdmin())) redirect("/agency/equipo");
   return profile;
 }
 

@@ -8,9 +8,11 @@ import { AGENCY_TIER_LABEL, type AgencyTier } from "@/lib/types";
 export function RoleSelect({
   agencyId,
   tier,
+  locked = false,
 }: {
   agencyId: string;
   tier: AgencyTier;
+  locked?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +30,8 @@ export function RoleSelect({
     <div className="flex flex-col items-end gap-1">
       <select
         value={tier}
-        disabled={pending}
+        disabled={pending || locked}
+        title={locked ? "El super admin no se puede cambiar" : undefined}
         onChange={(e) => onChange(e.target.value as AgencyTier)}
         className="rounded-lg border border-black/10 bg-card px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
       >
