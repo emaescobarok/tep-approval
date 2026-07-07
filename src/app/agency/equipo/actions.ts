@@ -41,8 +41,13 @@ export async function setAgencyRole(
   agencyId: string,
   tier: AgencyTier
 ): Promise<{ ok: boolean; error?: string }> {
-  await requireAdmin();
+  const me = await requireAdmin();
   const admin = createAdminClient();
+
+  // Nadie puede quitarse su propio admin (evita dejarse afuera sin querer).
+  if (agencyId === me.id && tier !== "admin") {
+    return { ok: false, error: "No podés cambiar tu propio rol de admin." };
+  }
 
   if (tier !== "admin") {
     // El super admin no se puede degradar.

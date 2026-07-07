@@ -77,7 +77,7 @@ export default async function EquipoPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <RoleSelect agencyId={m.id} tier={tier} locked={isSuperMember} />
+                    <RoleSelect agencyId={m.id} tier={tier} locked={isSuperMember || m.id === me.id} />
                     {canDelete && (
                       <DeleteAgencyUserButton
                         agencyId={m.id}

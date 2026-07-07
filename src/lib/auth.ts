@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/types";
 
 // Super admin: el dueño de la plataforma. No se puede eliminar ni degradar, y
@@ -48,8 +48,21 @@ export async function requireAgency(): Promise<Profile> {
 
 export async function requireAdmin(): Promise<Profile> {
   const profile = await requireAgency();
-  if (!profile.is_admin) redirect("/agency/dashboard");
-  return profile;
+  if (profile.is_admin) return profile;
+
+  // El super admin SIEMPRE tiene acceso total, aunque su flag quedara en false.
+  // Además se auto-repara para que la base quede coherente.
+  if (await isSuperAdmin()) {
+    const admin = createAdminClient();
+    await admin
+      .from("profiles")
+      .update({ is_admin: true, is_pm: false })
+      .eq("id", profile.id);
+    profile.is_admin = true;
+    return profile;
+  }
+
+  redirect("/agency/dashboard");
 }
 
 // ¿El usuario de agencia puede gestionar (admin o Project Manager)?
