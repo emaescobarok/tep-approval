@@ -70,10 +70,10 @@ export function MentionsBell({
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
           <div
             className={
-              "absolute right-0 z-40 mt-2 overflow-hidden rounded-xl border border-border bg-card shadow-lg " +
-              (placement === "sidebar"
-                ? "w-56 max-w-[calc(100vw-1rem)]"
-                : "w-80 max-w-[calc(100vw-2rem)]")
+              "absolute z-40 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-lg " +
+              // Agencia (sidebar): se despliega hacia la derecha, sobre el contenido.
+              // Cliente (topbar): se despliega hacia la izquierda.
+              (placement === "sidebar" ? "left-0" : "right-0")
             }
           >
             <div className="border-b border-border px-3 py-2 text-sm font-medium">
