@@ -93,7 +93,13 @@ export default async function CalendarioPage({
         {posts.length > 0 && (
           <>
             <div className="mt-6 flex justify-end">
-              <ViewToggle view={view} basePath="/client/calendario" month={month} year={year} />
+              <ViewToggle
+                view={view}
+                basePath="/client/calendario"
+                month={month}
+                year={year}
+                views={["grid", "cal"]}
+              />
             </div>
 
             {view === "cal" ? (
