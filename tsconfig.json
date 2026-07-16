@@ -10,6 +10,10 @@
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
+    // Los tests corren con `node --test`, que ejecuta TypeScript de forma nativa
+    // pero exige la extensión en el import (./sanitize.ts). Sin esto, tsc marca
+    // error TS5097. Solo lo habilita; nada obliga a usarlo fuera de los tests.
+    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",

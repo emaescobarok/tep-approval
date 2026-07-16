@@ -1,47 +1,46 @@
-// Sanitizador mínimo para el HTML enriquecido de la introducción.
-// Permite solo un conjunto acotado de etiquetas de formato y, en los enlaces,
-// solo el atributo href con esquemas seguros. Elimina scripts, estilos y
-// atributos de eventos (on*) para evitar XSS.
-const ALLOWED_TAGS = new Set([
-  "b",
-  "strong",
-  "i",
-  "em",
-  "u",
-  "br",
-  "p",
-  "div",
-  "span",
-  "ul",
-  "ol",
-  "li",
+import DOMPurify from "isomorphic-dompurify";
+
+// Sanitizador del HTML enriquecido de la introducción.
+//
+// Antes esto era un parser a base de regex y se podía escapar: si el href venía
+// entre comillas SIMPLES, el valor capturado podía contener una comilla doble, y
+// al interpolarlo en href="..." cerraba el atributo antes de tiempo.
+//
+//   <a href='https://x.com" onfocus="alert(1)" autofocus="'>
+//
+// Pasaba el chequeo de esquema (empieza con https://) y salía con un onfocus
+// intacto, que además dispara solo por el autofocus. Parsear HTML con regex
+// siempre termina así: DOMPurify arma el DOM de verdad y decide sobre el árbol,
+// no sobre el texto.
+//
+// La política es la misma de antes: formato básico y, en los links, solo href
+// con esquemas seguros.
+
+const ALLOWED_TAGS = [
+  "b", "strong", "i", "em", "u", "br",
+  "p", "div", "span",
+  "ul", "ol", "li",
   "a",
-]);
+];
+
+// Solo http(s) y mailto, igual que la versión anterior.
+const ALLOWED_URI_REGEXP = /^(?:https?|mailto):/i;
+
+// Los links de la intro van siempre a pestaña nueva y sin filtrar el referrer.
+// Va en un hook, sobre el nodo ya parseado, en vez de concatenar strings: la
+// concatenación era justamente el bug.
+DOMPurify.addHook("afterSanitizeAttributes", (node) => {
+  if (node.nodeName === "A" && node.hasAttribute("href")) {
+    node.setAttribute("target", "_blank");
+    node.setAttribute("rel", "noopener noreferrer nofollow");
+  }
+});
 
 export function sanitizeIntroHtml(html: string): string {
   if (!html) return "";
-
-  // Quitar bloques script/style completos.
-  let out = html.replace(/<\/?(script|style)[^>]*>/gi, "");
-
-  // Recorrer todas las etiquetas y filtrarlas.
-  out = out.replace(/<(\/?)([a-z0-9]+)([^>]*)>/gi, (match, slash, tagRaw, attrs) => {
-    const tag = String(tagRaw).toLowerCase();
-    if (!ALLOWED_TAGS.has(tag)) return "";
-    if (slash) return `</${tag}>`;
-
-    if (tag === "a") {
-      const hrefMatch = /href\s*=\s*("([^"]*)"|'([^']*)')/i.exec(attrs);
-      const href = hrefMatch ? hrefMatch[2] ?? hrefMatch[3] ?? "" : "";
-      const safe = /^(https?:|mailto:)/i.test(href) ? href : "";
-      return safe
-        ? `<a href="${safe}" target="_blank" rel="noopener noreferrer nofollow">`
-        : "<a>";
-    }
-
-    // Para el resto, descartar todos los atributos (incluidos on*).
-    return `<${tag}>`;
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS,
+    ALLOWED_ATTR: ["href", "target", "rel"],
+    ALLOWED_URI_REGEXP,
   });
-
-  return out;
 }
