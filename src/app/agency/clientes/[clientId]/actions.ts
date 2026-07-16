@@ -35,11 +35,12 @@ async function ensureCalendar(clientId: string, month: number, year: number) {
 
 type MediaInput = { storage_path: string; media_type: MediaTipo };
 
-// Normaliza el par objetivo/objetivo_otro según el CHECK de la DB (0014):
-// el texto libre es obligatorio con 'otro' y debe ser null con cualquier otro.
+// Normaliza el par objetivo/objetivo_otro según los constraints de la DB:
+// el objetivo es NOT NULL (0015), y el texto libre es obligatorio con 'otro'
+// y debe ser null con cualquier otro (CHECK de la 0014).
 function normalizeObjetivo(objetivo?: PostObjetivo | null, otro?: string) {
   const otroTrim = (otro ?? "").trim();
-  if (!objetivo) return { ok: true as const, objetivo: null, objetivo_otro: null };
+  if (!objetivo) return { ok: false as const, error: "Elegí el objetivo de la pieza." };
   if (objetivo === "otro") {
     if (!otroTrim) return { ok: false as const, error: "Escribí cuál es el objetivo." };
     return { ok: true as const, objetivo, objetivo_otro: otroTrim };

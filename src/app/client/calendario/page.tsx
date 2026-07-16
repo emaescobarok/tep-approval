@@ -1,6 +1,6 @@
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { computeThumbs } from "@/lib/media";
+import { computePostMedia, type MediaUrl } from "@/lib/media";
 import { Topbar } from "@/components/topbar";
 import { ProgressSummary } from "@/components/progress-summary";
 import { MonthSwitcher } from "@/components/month-switcher";
@@ -26,23 +26,22 @@ export default async function CalendarioPage({
   const year = Number(sp.year) || now.getFullYear();
   const view = sp.view === "cal" ? "cal" : "grid";
 
-  const { data: client } = await supabase
-    .from("clients")
-    .select("name, logo_url")
-    .eq("id", profile.client_id!)
-    .single();
-
-  // Calendario del mes (RLS ya garantiza que sea del cliente correcto)
-  const { data: calendar } = await supabase
-    .from("calendars")
-    .select("id, intro")
-    .eq("client_id", profile.client_id!)
-    .eq("month", month)
-    .eq("year", year)
-    .maybeSingle();
+  // El cliente y el calendario del mes no dependen entre sí (RLS ya garantiza
+  // que el calendario sea del cliente correcto).
+  const [{ data: client }, { data: calendar }] = await Promise.all([
+    supabase.from("clients").select("name, logo_url").eq("id", profile.client_id!).single(),
+    supabase
+      .from("calendars")
+      .select("id, intro")
+      .eq("client_id", profile.client_id!)
+      .eq("month", month)
+      .eq("year", year)
+      .maybeSingle(),
+  ]);
 
   let posts: Post[] = [];
   let thumbs: Record<string, string | null> = {};
+  let media: Record<string, MediaUrl[]> = {};
   let commentCounts: Record<string, number> = {};
 
   if (calendar) {
@@ -53,18 +52,18 @@ export default async function CalendarioPage({
       .order("position", { ascending: true });
     posts = (data as Post[]) ?? [];
 
-    thumbs = await computeThumbs(supabase, posts);
-
+    // Media y conteo de comentarios no dependen entre sí.
     const ids = posts.map((p) => p.id);
-    if (ids.length) {
-      const { data: comments } = await supabase
-        .from("comments")
-        .select("post_id")
-        .in("post_id", ids);
-      (comments as { post_id: string }[] | null)?.forEach((c) => {
-        commentCounts[c.post_id] = (commentCounts[c.post_id] ?? 0) + 1;
-      });
-    }
+    const [mediaData, { data: comments }] = await Promise.all([
+      computePostMedia(supabase, posts),
+      ids.length
+        ? supabase.from("comments").select("post_id").in("post_id", ids)
+        : Promise.resolve({ data: null }),
+    ]);
+    ({ thumbs, media } = mediaData);
+    (comments as { post_id: string }[] | null)?.forEach((c) => {
+      commentCounts[c.post_id] = (commentCounts[c.post_id] ?? 0) + 1;
+    });
   }
 
   return (
@@ -116,7 +115,7 @@ export default async function CalendarioPage({
                 </div>
                 <Card className="h-fit">
                   <CardHeader><CardTitle className="text-base">Vista previa del feed</CardTitle></CardHeader>
-                  <CardContent><FeedPreview posts={posts} thumbs={thumbs} handle={client?.name ?? "cuenta"} /></CardContent>
+                  <CardContent><FeedPreview posts={posts} thumbs={thumbs} media={media} handle={client?.name ?? "cuenta"} /></CardContent>
                 </Card>
               </div>
             )}

@@ -6,7 +6,7 @@ import { NavArrow } from "@/components/nav-arrow";
 import { EditPostForm } from "./edit-post-form";
 import { requireAgency } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { signedUrl } from "@/lib/media";
+import { signedUrls } from "@/lib/media";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -32,40 +32,47 @@ export default async function AgencyPiezaPage({
   const editing = edit === "1";
   const supabase = await createClient();
 
-  const { data: post } = await supabase.from("posts").select("*").eq("id", postId).maybeSingle();
+  // Tanda 1: todo lo que solo depende de postId, en paralelo.
+  const [{ data: post }, { data: mediaRows }, { data: commentRows }, participants] =
+    await Promise.all([
+      supabase.from("posts").select("*").eq("id", postId).maybeSingle(),
+      supabase.from("post_media").select("*").eq("post_id", postId).order("position"),
+      supabase.from("comments").select("*").eq("post_id", postId).order("created_at"),
+      getPostParticipants(postId),
+    ]);
   if (!post) notFound(); // RLS: si no tiene acceso, no lo ve
 
   const p = post as Post;
+  const media = (mediaRows as PostMedia[]) ?? [];
+  const comments = (commentRows as Comment[]) ?? [];
 
-  // Cliente (para el link de vuelta) vía calendar
-  const { data: cal } = await supabase
-    .from("calendars").select("client_id, month, year").eq("id", p.calendar_id).single();
-  const { data: client } = await supabase
-    .from("clients").select("name").eq("id", cal!.client_id).single();
-  const backHref = `/agency/clientes/${cal!.client_id}?month=${cal!.month}&year=${cal!.year}`;
+  // Tanda 2: lo que necesita el post ya resuelto. Las URLs van en una sola
+  // llamada batch (media + portada juntas) en vez de una por archivo.
+  const mediaPaths = media.map((m) => m.storage_path);
+  const paths = p.cover_path ? [...mediaPaths, p.cover_path] : mediaPaths;
+  const [{ data: cal }, { data: siblingRows }, signed] = await Promise.all([
+    supabase.from("calendars").select("client_id, month, year").eq("id", p.calendar_id).single(),
+    supabase
+      .from("posts")
+      .select("id, publish_date, position")
+      .eq("calendar_id", p.calendar_id)
+      .order("publish_date", { ascending: true, nullsFirst: false })
+      .order("position", { ascending: true }),
+    signedUrls(supabase, paths),
+  ]);
 
-  // Piezas vecinas del mismo calendario, ordenadas por fecha (menor a mayor).
-  const { data: siblingRows } = await supabase
-    .from("posts")
-    .select("id, publish_date, position")
-    .eq("calendar_id", p.calendar_id)
-    .order("publish_date", { ascending: true, nullsFirst: false })
-    .order("position", { ascending: true });
+  const urls = signed.slice(0, media.length);
+  const coverUrl = p.cover_path ? signed[media.length] ?? null : null;
+
   const siblings = (siblingRows as { id: string }[]) ?? [];
   const idx = siblings.findIndex((s) => s.id === postId);
   const prevId = idx > 0 ? siblings[idx - 1].id : null;
   const nextId = idx >= 0 && idx < siblings.length - 1 ? siblings[idx + 1].id : null;
 
-  const { data: mediaRows } = await supabase
-    .from("post_media").select("*").eq("post_id", postId).order("position");
-  const media = (mediaRows as PostMedia[]) ?? [];
-  const urls = await Promise.all(media.map((m) => signedUrl(supabase, m.storage_path)));
-  const coverUrl = p.cover_path ? await signedUrl(supabase, p.cover_path) : null;
-
-  const { data: commentRows } = await supabase
-    .from("comments").select("*").eq("post_id", postId).order("created_at");
-  const comments = (commentRows as Comment[]) ?? [];
-  const participants = await getPostParticipants(postId);
+  // Tanda 3: el nombre del cliente necesita el calendar.
+  const { data: client } = await supabase
+    .from("clients").select("name").eq("id", cal!.client_id).single();
+  const backHref = `/agency/clientes/${cal!.client_id}?month=${cal!.month}&year=${cal!.year}`;
 
   const comment = addAgencyComment.bind(null, postId);
 
@@ -85,7 +92,7 @@ export default async function AgencyPiezaPage({
             {!editing && (
               <Link
                 href={`/agency/piezas/${postId}?edit=1`}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-black/10 px-3 py-1.5 text-sm font-medium hover:bg-muted"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium hover:bg-muted"
               >
                 <Pencil className="size-4" /> Editar pieza
               </Link>
@@ -172,11 +179,9 @@ export default async function AgencyPiezaPage({
               <div className="flex items-center justify-between">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <Badge>{TIPO_LABEL[p.tipo]}</Badge>
-                  {objetivoLabel(p) && (
-                    <Badge className="border-accent/30 bg-accent/10 text-accent">
-                      {objetivoLabel(p)}
-                    </Badge>
-                  )}
+                  <Badge className="border-accent/30 bg-accent/10 text-accent">
+                    {objetivoLabel(p)}
+                  </Badge>
                 </div>
                 <StatusBadge estado={p.estado} />
               </div>

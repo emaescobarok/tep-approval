@@ -1,16 +1,63 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Post, PostMedia } from "@/lib/types";
+import type { MediaTipo, Post, PostMedia } from "@/lib/types";
 
-// Genera una URL firmada temporal para un archivo del bucket privado.
-export async function signedUrl(
+// Firma varias rutas del bucket privado en una sola llamada. Devuelve las URLs
+// en el mismo orden que las rutas recibidas. No hay versión de a una a propósito:
+// mapearla sobre una lista era un N+1 (una request HTTP por archivo).
+export async function signedUrls(
   supabase: SupabaseClient,
-  path: string,
+  paths: string[],
   expiresIn = 3600
-): Promise<string | null> {
-  const { data } = await supabase.storage
-    .from("post-media")
-    .createSignedUrl(path, expiresIn);
-  return data?.signedUrl ?? null;
+): Promise<(string | null)[]> {
+  if (paths.length === 0) return [];
+  const { data } = await supabase.storage.from("post-media").createSignedUrls(paths, expiresIn);
+  return paths.map((_, i) => data?.[i]?.signedUrl ?? null);
+}
+
+export type MediaUrl = { url: string; mediaType: MediaTipo };
+
+// Miniaturas + todas las media, con UNA query y UNA llamada de firma.
+// Llamar computeThumbs y computeMediaUrls por separado consultaba post_media dos
+// veces y firmaba la primera imagen de cada pieza dos veces. Usar esta cuando se
+// necesitan las dos cosas (las vistas con FeedPreview); si solo hacen falta las
+// miniaturas, computeThumbs sigue siendo más barata.
+export async function computePostMedia(
+  supabase: SupabaseClient,
+  posts: Post[]
+): Promise<{ thumbs: Record<string, string | null>; media: Record<string, MediaUrl[]> }> {
+  const thumbs: Record<string, string | null> = {};
+  const media: Record<string, MediaUrl[]> = {};
+  if (posts.length === 0) return { thumbs, media };
+
+  const { data } = await supabase
+    .from("post_media")
+    .select("post_id, storage_path, media_type")
+    .in("post_id", posts.map((p) => p.id))
+    .order("position");
+  const rows = (data as Pick<PostMedia, "post_id" | "storage_path" | "media_type">[] | null) ?? [];
+
+  // Un solo lote: todas las media + las portadas. Se firma cada ruta una vez.
+  const covers = posts.filter((p) => p.cover_path).map((p) => p.cover_path!);
+  const paths = [...rows.map((r) => r.storage_path), ...covers];
+  const signed = await signedUrls(supabase, paths);
+
+  rows.forEach((r, i) => {
+    const url = signed[i];
+    if (!url) return;
+    media[r.post_id] = [...(media[r.post_id] ?? []), { url, mediaType: r.media_type }];
+  });
+
+  const coverUrl = new Map<string, string | null>();
+  covers.forEach((path, i) => coverUrl.set(path, signed[rows.length + i]));
+
+  // La miniatura es la portada si existe, si no la primera media (ya firmada).
+  for (const p of posts) {
+    thumbs[p.id] = p.cover_path
+      ? coverUrl.get(p.cover_path) ?? null
+      : media[p.id]?.[0]?.url ?? null;
+  }
+
+  return { thumbs, media };
 }
 
 // Calcula la miniatura de cada pieza: portada del reel si existe, si no la

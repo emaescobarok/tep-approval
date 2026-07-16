@@ -25,11 +25,9 @@ export function PostCard({
         <div className="mt-3 flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge>{TIPO_LABEL[post.tipo]}</Badge>
-            {objetivoLabel(post) && (
-              <Badge className="border-accent/30 bg-accent/10 text-accent">
-                {objetivoLabel(post)}
-              </Badge>
-            )}
+            <Badge className="border-accent/30 bg-accent/10 text-accent">
+              {objetivoLabel(post)}
+            </Badge>
             {post.publish_date && (
               <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                 <CalendarDays className="size-3" /> {formatPublishDate(post.publish_date)}

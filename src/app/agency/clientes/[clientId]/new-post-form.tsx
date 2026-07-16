@@ -51,6 +51,10 @@ export function NewPostForm({
       setError("El copy es obligatorio para carrusel y texto.");
       return;
     }
+    if (!objetivo) {
+      setError("Elegí el objetivo de la pieza.");
+      return;
+    }
     if (objetivo === "otro" && !objetivoOtro.trim()) {
       setError("Escribí cuál es el objetivo.");
       return;
@@ -98,7 +102,7 @@ export function NewPostForm({
 
     const res = await createPost({
       clientId, month, year, tipo,
-      objetivo: objetivo || null, objetivoOtro,
+      objetivo, objetivoOtro,
       plataforma: PLATAFORMA_DEFAULT,
       copy, publishDate, driveUrl, coverPath, media,
     });
@@ -138,7 +142,7 @@ export function NewPostForm({
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium">
-          Objetivo <span className="text-muted-foreground">(opcional)</span>
+          Objetivo <span className="text-destructive">*</span>
         </label>
         <ObjetivoPicker
           value={objetivo}

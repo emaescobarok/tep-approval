@@ -41,7 +41,7 @@ export function EditPostForm({
   postId: string;
   clientId: string;
   tipo: PostTipo;
-  initialObjetivo: PostObjetivo | null;
+  initialObjetivo: PostObjetivo;
   initialObjetivoOtro: string;
   initialCopy: string;
   initialPublishDate: string;
@@ -54,8 +54,7 @@ export function EditPostForm({
   const isReel = tipo === "reel_video";
   const copyRequired = TIPOS_CON_COPY_OBLIGATORIO.includes(tipo);
 
-  // "" = sin objetivo (es opcional).
-  const [objetivo, setObjetivo] = useState<PostObjetivo | "">(initialObjetivo ?? "");
+  const [objetivo, setObjetivo] = useState<PostObjetivo | "">(initialObjetivo);
   const [objetivoOtro, setObjetivoOtro] = useState(initialObjetivoOtro);
   const [copy, setCopy] = useState(initialCopy);
   const [publishDate, setPublishDate] = useState(initialPublishDate);
@@ -129,6 +128,10 @@ export function EditPostForm({
       setError("El copy es obligatorio para carrusel y texto.");
       return;
     }
+    if (!objetivo) {
+      setError("Elegí el objetivo de la pieza.");
+      return;
+    }
     if (objetivo === "otro" && !objetivoOtro.trim()) {
       setError("Escribí cuál es el objetivo.");
       return;
@@ -178,7 +181,7 @@ export function EditPostForm({
       postId,
       clientId,
       tipo,
-      objetivo: objetivo || null,
+      objetivo,
       objetivoOtro,
       copy,
       publishDate,
@@ -210,7 +213,7 @@ export function EditPostForm({
                 <ImageOff className="size-5" />
               </div>
             )}
-            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-black/10 px-3 py-1.5 text-sm hover:bg-muted">
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-muted">
               <Upload className="size-4" /> Cambiar portada
               <input
                 type="file" accept="image/*" className="hidden"
@@ -235,7 +238,7 @@ export function EditPostForm({
                 onDragStart={() => (dragIndex.current = idx)}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={() => onDrop(idx)}
-                className="group relative aspect-square cursor-grab overflow-hidden rounded-lg border border-black/10 active:cursor-grabbing"
+                className="group relative aspect-square cursor-grab overflow-hidden rounded-lg border border-border active:cursor-grabbing"
               >
                 {item.mediaType === "video" ? (
                   <video src={item.url} className="h-full w-full object-cover" />
@@ -261,7 +264,7 @@ export function EditPostForm({
             ))}
           </div>
         )}
-        <label className="inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-lg border border-black/10 px-3 py-1.5 text-sm hover:bg-muted">
+        <label className="inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-muted">
           <Upload className="size-4" /> Agregar imágenes
           <input
             type="file" multiple accept="image/*,video/*" className="hidden"
@@ -276,7 +279,7 @@ export function EditPostForm({
       {/* Objetivo */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium">
-          Objetivo <span className="text-muted-foreground">(opcional)</span>
+          Objetivo <span className="text-destructive">*</span>
         </label>
         <ObjetivoPicker
           value={objetivo}
@@ -294,7 +297,7 @@ export function EditPostForm({
         <textarea
           value={copy} onChange={(e) => setCopy(e.target.value)} rows={4}
           placeholder="Escribí el copy de la pieza..."
-          className="rounded-lg border border-black/10 bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
@@ -310,11 +313,11 @@ export function EditPostForm({
         <input
           type="url" value={driveUrl} onChange={(e) => setDriveUrl(e.target.value)}
           placeholder="https://drive.google.com/..."
-          className="rounded-lg border border-black/10 bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex items-center gap-2 border-t border-border pt-4">
         <Button type="button" onClick={save} disabled={busy}>

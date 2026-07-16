@@ -2,12 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAgency, canManage } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { computeThumbs } from "@/lib/media";
+import { computePostMedia, type MediaUrl } from "@/lib/media";
 import { MonthSwitcher } from "@/components/month-switcher";
 import { MediaThumb } from "@/components/media-thumb";
 import { FeedPreview } from "@/components/feed-preview";
 import { MonthCalendar } from "@/components/month-calendar";
-import { ViewToggle } from "@/components/view-toggle";
+import { ViewToggle, type View } from "@/components/view-toggle";
+import { AgendaView } from "@/components/agenda-view";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,43 +39,43 @@ export default async function AgencyClientPage({
   const sp = await searchParams;
   const month = Number(sp.month) || now.getMonth() + 1;
   const year = Number(sp.year) || now.getFullYear();
-  const view = sp.view === "cal" ? "cal" : "grid";
-
-  const { data: client } = await supabase.from("clients").select("*").eq("id", clientId).maybeSingle();
-  if (!client) notFound();
-
-  const { data: users } = await supabase
-    .from("profiles").select("id, full_name").eq("client_id", clientId);
+  const view: View = sp.view === "cal" ? "cal" : sp.view === "agenda" ? "agenda" : "grid";
 
   const manager = canManage(profile);
 
-  // Estrategas de la agencia y cuáles están asignados a esta cuenta
-  // (solo se usa/renderiza para managers).
-  let strategists: { id: string; full_name: string | null }[] = [];
-  let assignedStrategistIds = new Set<string>();
-  if (manager) {
-    const { data: strat } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .eq("role", "agency").eq("is_admin", false).eq("is_pm", false)
-      .order("created_at");
-    strategists = strat ?? [];
-    const { data: asg } = await supabase
-      .from("client_assignments").select("agency_id").eq("client_id", clientId);
-    assignedStrategistIds = new Set((asg ?? []).map((a) => a.agency_id));
-  }
+  // Tanda 1: nada de esto depende de lo otro, va todo junto. Los estrategas y
+  // las asignaciones solo se renderizan para managers, así que ni se piden si no.
+  const [{ data: client }, { data: users }, { data: strat }, { data: asg }, { data: calendar }] =
+    await Promise.all([
+      supabase.from("clients").select("*").eq("id", clientId).maybeSingle(),
+      supabase.from("profiles").select("id, full_name").eq("client_id", clientId),
+      manager
+        ? supabase
+            .from("profiles")
+            .select("id, full_name")
+            .eq("role", "agency").eq("is_admin", false).eq("is_pm", false)
+            .order("created_at")
+        : Promise.resolve({ data: null }),
+      manager
+        ? supabase.from("client_assignments").select("agency_id").eq("client_id", clientId)
+        : Promise.resolve({ data: null }),
+      supabase
+        .from("calendars").select("id, intro")
+        .eq("client_id", clientId).eq("month", month).eq("year", year).maybeSingle(),
+    ]);
+  if (!client) notFound();
 
-  const { data: calendar } = await supabase
-    .from("calendars").select("id, intro")
-    .eq("client_id", clientId).eq("month", month).eq("year", year).maybeSingle();
+  const strategists: { id: string; full_name: string | null }[] = strat ?? [];
+  const assignedStrategistIds = new Set((asg ?? []).map((a) => a.agency_id));
 
   let posts: Post[] = [];
   let thumbs: Record<string, string | null> = {};
+  let media: Record<string, MediaUrl[]> = {};
   if (calendar) {
     const { data } = await supabase
       .from("posts").select("*").eq("calendar_id", calendar.id).order("position");
     posts = (data as Post[]) ?? [];
-    thumbs = await computeThumbs(supabase, posts);
+    ({ thumbs, media } = await computePostMedia(supabase, posts));
   }
 
   return (
@@ -129,6 +130,8 @@ export default async function AgencyClientPage({
               </div>
             ) : view === "cal" ? (
               <MonthCalendar posts={posts} month={month} year={year} hrefBase="/agency/piezas/" />
+            ) : view === "agenda" ? (
+              <AgendaView posts={posts} thumbs={thumbs} hrefBase="/agency/piezas/" />
             ) : (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {posts.map((post) => (
@@ -143,15 +146,13 @@ export default async function AgencyClientPage({
                       <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-1 bg-gradient-to-b from-black/50 to-transparent p-2">
                         <div className="flex min-w-0 flex-wrap items-center gap-1">
                           <Badge className="bg-black/50 text-white backdrop-blur-sm">{TIPO_LABEL[post.tipo]}</Badge>
-                          {objetivoLabel(post) && (
-                            // max-w + truncate: un objetivo 'otro' puede traer hasta 40 caracteres.
-                            <Badge
-                              title={objetivoLabel(post)!}
-                              className="max-w-[7rem] bg-accent/80 text-white backdrop-blur-sm"
-                            >
-                              <span className="truncate">{objetivoLabel(post)}</span>
-                            </Badge>
-                          )}
+                          {/* max-w + truncate: un objetivo 'otro' puede traer hasta 40 caracteres. */}
+                          <Badge
+                            title={objetivoLabel(post)}
+                            className="max-w-[7rem] border-transparent bg-accent text-accent-foreground backdrop-blur-sm"
+                          >
+                            <span className="truncate">{objetivoLabel(post)}</span>
+                          </Badge>
                         </div>
                         {post.publish_date && (
                           <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-white drop-shadow">
@@ -190,7 +191,7 @@ export default async function AgencyClientPage({
             <Card>
               <CardHeader><CardTitle className="text-base">Vista previa del feed</CardTitle></CardHeader>
               <CardContent>
-                <FeedPreview posts={posts} thumbs={thumbs} handle={client.name} />
+                <FeedPreview posts={posts} thumbs={thumbs} media={media} handle={client.name} />
               </CardContent>
             </Card>
           )}
