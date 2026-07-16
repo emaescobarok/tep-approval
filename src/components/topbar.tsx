@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { logout } from "@/app/login/actions";
 import { Button } from "@/components/ui/button";
 import { MentionsBellServer } from "@/components/mentions-bell-server";
@@ -24,9 +25,15 @@ export function Topbar({
               <img src={logoUrl} alt={title} className="h-full w-full object-cover" />
             </div>
           ) : (
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-              Tep
-            </div>
+            // Sin logo de la cuenta, el de tep: el mismo archivo del sidebar,
+            // no unas iniciales dibujadas.
+            <Image
+              src="/logo.jpg"
+              alt="tep agency"
+              width={36}
+              height={36}
+              className="size-9 rounded-lg object-cover"
+            />
           )}
           <div>
             <h1 className="text-lg font-semibold leading-tight">{title}</h1>
