@@ -215,7 +215,7 @@ export default async function AgencyPiezaPage({
               </div>
 
               <div className="mt-auto flex justify-end border-t border-border pt-4">
-                <DeletePostButton postId={p.id} clientId={cal!.client_id} />
+                <DeletePostButton postId={p.id} clientId={cal!.client_id} redirectTo={backHref} />
               </div>
             </div>
           </CardContent>
