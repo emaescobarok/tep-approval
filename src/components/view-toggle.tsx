@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { LayoutGrid, CalendarDays } from "lucide-react";
+import { LayoutGrid, CalendarDays, ListOrdered } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type View = "grid" | "cal";
+export type View = "grid" | "cal" | "agenda";
 
-// Alterna entre la grilla de piezas y el calendario del mes.
+// Alterna entre la grilla de piezas, el calendario del mes y la agenda por día.
 // Preserva month/year en la URL vía ?view=.
 export function ViewToggle({
   view,
@@ -34,6 +34,9 @@ export function ViewToggle({
       </Link>
       <Link href={build("cal")} className={cn(base, view === "cal" ? active : inactive)}>
         <CalendarDays className="size-4" /> Calendario
+      </Link>
+      <Link href={build("agenda")} className={cn(base, view === "agenda" ? active : inactive)}>
+        <ListOrdered className="size-4" /> Agenda
       </Link>
     </div>
   );
