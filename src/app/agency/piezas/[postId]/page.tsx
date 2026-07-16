@@ -15,9 +15,9 @@ import { CommentComposer } from "@/components/comment-composer";
 import { getPostParticipants } from "@/lib/mentions";
 import { DeletePostButton } from "../../clientes/[clientId]/delete-post-button";
 import { TIPO_LABEL, objetivoLabel, type Comment, type Post, type PostMedia } from "@/lib/types";
-import { formatPublishDate } from "@/lib/utils";
+import { formatPublishDate, cn } from "@/lib/utils";
 import { CalendarDays } from "lucide-react";
-import { addAgencyComment } from "./actions";
+import { addAgencyComment, deleteComment } from "./actions";
 
 export default async function AgencyPiezaPage({
   params,
@@ -26,7 +26,7 @@ export default async function AgencyPiezaPage({
   params: Promise<{ postId: string }>;
   searchParams: Promise<{ edit?: string }>;
 }) {
-  await requireAgency();
+  const profile = await requireAgency();
   const { postId } = await params;
   const { edit } = await searchParams;
   const editing = edit === "1";
@@ -75,6 +75,8 @@ export default async function AgencyPiezaPage({
   const backHref = `/agency/clientes/${cal!.client_id}?month=${cal!.month}&year=${cal!.year}`;
 
   const comment = addAgencyComment.bind(null, postId);
+  // Sin esto, CommentThread no muestra el botón de borrar.
+  const removeComment = profile.is_admin ? deleteComment.bind(null, postId) : undefined;
 
   return (
     <>
@@ -151,8 +153,10 @@ export default async function AgencyPiezaPage({
                   className="h-auto w-full rounded-xl"
                 />
               )}
+              {/* Con una sola media va a ancho completo: en 2 columnas fijas, una
+                  historia o una placa suelta quedaban a media columna. */}
               {media.length ? (
-                <div className="grid grid-cols-2 gap-2">
+                <div className={cn("grid gap-2", media.length > 1 && "grid-cols-2")}>
                   {media.map((m, i) =>
                     m.media_type === "video" ? (
                       <video key={m.id} src={urls[i] ?? undefined} controls className="w-full rounded-xl" />
@@ -210,7 +214,7 @@ export default async function AgencyPiezaPage({
               {/* Comentarios en la misma columna, para aprovechar el alto */}
               <div className="mt-2 flex flex-col gap-3 border-t border-border pt-4">
                 <p className="text-sm font-medium">Comentarios</p>
-                <CommentThread comments={comments} participants={participants} />
+                <CommentThread comments={comments} participants={participants} deleteAction={removeComment} />
                 <CommentComposer
                   action={comment}
                   participants={participants}

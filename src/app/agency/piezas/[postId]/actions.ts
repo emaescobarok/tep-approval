@@ -20,3 +20,17 @@ export async function addAgencyComment(postId: string, formData: FormData) {
   });
   revalidatePath(`/agency/piezas/${postId}`);
 }
+
+// Borra un comentario. Solo admin: se chequea acá y además en la RLS (0016),
+// para que no alcance con pegarle a la action salteando el UI.
+export async function deleteComment(
+  postId: string,
+  commentId: string
+): Promise<void> {
+  const profile = await requireAgency();
+  if (!profile.is_admin) return;
+
+  const supabase = await createClient();
+  await supabase.from("comments").delete().eq("id", commentId);
+  revalidatePath(`/agency/piezas/${postId}`);
+}
