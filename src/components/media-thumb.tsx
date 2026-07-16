@@ -4,12 +4,14 @@ import { type PostPlataforma, type PostTipo, TIPO_LABEL } from "@/lib/types";
 import { Image as ImageIcon, Film, LayoutGrid, Clock3, Type } from "lucide-react";
 
 // Degradado por tipo — único lugar del UI con degradados (según el brief).
+// Solo se ve cuando la pieza no tiene imagen. Todos dentro de la familia
+// lima/amarillo para no romper la identidad; se distinguen por matiz.
 const gradients: Record<PostTipo, string> = {
-  carrusel: "from-primary via-accent to-chart-3",
-  imagen: "from-emerald-500 to-teal-400",
-  reel_video: "from-violet-600 via-fuchsia-500 to-rose-400",
-  historia: "from-amber-500 to-orange-400",
-  texto: "from-sky-600 to-cyan-400",
+  carrusel: "from-lime-300 via-lime-500 to-emerald-600",
+  imagen: "from-lime-200 to-lime-500",
+  reel_video: "from-yellow-300 via-lime-400 to-teal-600",
+  historia: "from-amber-300 to-yellow-500",
+  texto: "from-neutral-400 to-neutral-600",
 };
 
 const tipoIcon: Record<PostTipo, React.ComponentType<{ className?: string }>> = {
@@ -53,7 +55,7 @@ export function MediaThumb({
           className="object-cover"
         />
       ) : (
-        <Icon className="size-8 text-white/90" />
+        <Icon className="size-8 text-black/50" />
       )}
     </div>
   );

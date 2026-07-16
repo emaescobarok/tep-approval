@@ -21,15 +21,15 @@ export function AcceptForm({ token, email }: { token: string; email: string }) {
       className="mt-8 flex flex-col gap-5"
     >
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-neutral-700">Email</label>
+        <label className="text-sm font-medium text-foreground">Email</label>
         <input
           value={email}
           readOnly
-          className="h-11 rounded-xl border border-white/60 bg-white/40 px-4 text-sm text-neutral-500"
+          className="h-11 rounded-xl border border-input bg-card/60 px-4 text-sm text-muted-foreground"
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-sm font-medium text-neutral-700">
+        <label htmlFor="password" className="text-sm font-medium text-foreground">
           Elegí tu contraseña
         </label>
         <input
@@ -40,7 +40,7 @@ export function AcceptForm({ token, email }: { token: string; email: string }) {
           minLength={8}
           autoComplete="new-password"
           placeholder="Mínimo 8 caracteres"
-          className="h-11 rounded-xl border border-white/60 bg-white/50 px-4 text-sm text-neutral-900 outline-none backdrop-blur placeholder:text-neutral-400 focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/20"
+          className="h-11 rounded-xl border border-input bg-card/60 px-4 text-sm text-foreground outline-none backdrop-blur placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-ring/40"
         />
       </div>
 

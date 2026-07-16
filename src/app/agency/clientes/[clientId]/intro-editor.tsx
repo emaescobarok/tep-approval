@@ -87,7 +87,7 @@ export function IntroEditor({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-1 rounded-t-lg border border-b-0 border-black/10 bg-muted/40 px-2 py-1">
+      <div className="flex flex-wrap items-center gap-1 rounded-t-lg border border-b-0 border-border bg-muted/40 px-2 py-1">
         {commands.map((c) => (
           <button
             key={c.title}
@@ -109,7 +109,7 @@ export function IntroEditor({
           onInput={syncEmpty}
           onPaste={handlePaste}
           dangerouslySetInnerHTML={{ __html: initial ?? "" }}
-          className="prose-intro min-h-28 -mt-2 rounded-b-lg border border-black/10 bg-card px-3 py-2 text-sm leading-relaxed outline-none focus:ring-0"
+          className="prose-intro min-h-28 -mt-2 rounded-b-lg border border-border bg-card px-3 py-2 text-sm leading-relaxed outline-none focus:ring-0"
         />
         {empty && (
           <p className="pointer-events-none absolute left-3 top-2 text-sm text-muted-foreground">

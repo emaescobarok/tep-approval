@@ -11,7 +11,7 @@ export function NavArrow({
   children: React.ReactNode;
 }) {
   const base =
-    "flex size-9 items-center justify-center rounded-lg border border-black/10 transition-colors";
+    "flex size-9 items-center justify-center rounded-lg border border-border transition-colors";
   if (!href) {
     return (
       <span

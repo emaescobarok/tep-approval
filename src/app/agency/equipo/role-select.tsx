@@ -33,7 +33,7 @@ export function RoleSelect({
         disabled={pending || locked}
         title={locked ? "El super admin no se puede cambiar" : undefined}
         onChange={(e) => onChange(e.target.value as AgencyTier)}
-        className="rounded-lg border border-black/10 bg-card px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+        className="rounded-lg border border-border bg-card px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
       >
         {(["strategist", "pm", "admin"] as AgencyTier[]).map((t) => (
           <option key={t} value={t}>
