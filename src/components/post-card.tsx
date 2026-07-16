@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { MediaThumb } from "@/components/media-thumb";
-import { TIPO_LABEL, type Post } from "@/lib/types";
+import { TIPO_LABEL, CATEGORIA_LABEL, type Post } from "@/lib/types";
 import { formatPublishDate } from "@/lib/utils";
 import { MessageSquare, CalendarDays } from "lucide-react";
 
@@ -25,6 +25,11 @@ export function PostCard({
         <div className="mt-3 flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge>{TIPO_LABEL[post.tipo]}</Badge>
+            {post.categoria && (
+              <Badge className="border-primary/30 bg-primary/10 text-primary">
+                {CATEGORIA_LABEL[post.categoria]}
+              </Badge>
+            )}
             {post.publish_date && (
               <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                 <CalendarDays className="size-3" /> {formatPublishDate(post.publish_date)}

@@ -6,6 +6,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { createInvitedUser, type InviteResult } from "@/lib/invites";
 import {
   TIPOS_CON_COPY_OBLIGATORIO,
+  type PostCategoria,
   type PostPlataforma,
   type PostTipo,
   type MediaTipo,
@@ -41,6 +42,7 @@ export async function createPost(input: {
   month: number;
   year: number;
   tipo: PostTipo;
+  categoria?: PostCategoria | null;
   plataforma: PostPlataforma;
   copy: string;
   publishDate?: string | null;
@@ -66,6 +68,7 @@ export async function createPost(input: {
     .insert({
       calendar_id: calendarId,
       tipo: input.tipo,
+      categoria: input.categoria ?? null,
       plataforma: input.plataforma,
       copy: copyTrim || null,
       publish_date: input.publishDate,
@@ -97,6 +100,7 @@ export async function updatePost(input: {
   postId: string;
   clientId: string;
   tipo: PostTipo;
+  categoria?: PostCategoria | null;
   copy: string;
   publishDate?: string | null;
   driveUrl?: string;
@@ -118,6 +122,7 @@ export async function updatePost(input: {
   const { error: upErr } = await supabase
     .from("posts")
     .update({
+      categoria: input.categoria ?? null,
       copy: copyTrim || null,
       publish_date: input.publishDate,
       drive_url: input.driveUrl?.trim() || null,

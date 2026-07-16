@@ -6,7 +6,15 @@ import { createClient } from "@/lib/supabase/client";
 import { updatePost } from "../../clientes/[clientId]/actions";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
-import { TIPOS_CON_COPY_OBLIGATORIO, type MediaTipo, type PostTipo } from "@/lib/types";
+import { Select } from "@/components/ui/select";
+import {
+  TIPOS_CON_COPY_OBLIGATORIO,
+  CATEGORIAS,
+  CATEGORIA_LABEL,
+  type MediaTipo,
+  type PostCategoria,
+  type PostTipo,
+} from "@/lib/types";
 import { Upload, GripVertical, X, ImageOff } from "lucide-react";
 
 type MediaItem = {
@@ -23,6 +31,7 @@ export function EditPostForm({
   postId,
   clientId,
   tipo,
+  initialCategoria,
   initialCopy,
   initialPublishDate,
   initialDriveUrl,
@@ -33,6 +42,7 @@ export function EditPostForm({
   postId: string;
   clientId: string;
   tipo: PostTipo;
+  initialCategoria: PostCategoria | null;
   initialCopy: string;
   initialPublishDate: string;
   initialDriveUrl: string;
@@ -44,6 +54,8 @@ export function EditPostForm({
   const isReel = tipo === "reel_video";
   const copyRequired = TIPOS_CON_COPY_OBLIGATORIO.includes(tipo);
 
+  // "" = sin categoría (es opcional).
+  const [categoria, setCategoria] = useState<PostCategoria | "">(initialCategoria ?? "");
   const [copy, setCopy] = useState(initialCopy);
   const [publishDate, setPublishDate] = useState(initialPublishDate);
   const [driveUrl, setDriveUrl] = useState(initialDriveUrl);
@@ -161,6 +173,7 @@ export function EditPostForm({
       postId,
       clientId,
       tipo,
+      categoria: categoria || null,
       copy,
       publishDate,
       driveUrl,
@@ -252,6 +265,20 @@ export function EditPostForm({
             }}
           />
         </label>
+      </div>
+
+      {/* Categoría */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium">Categoría</label>
+        <Select<PostCategoria | "">
+          value={categoria}
+          onChange={setCategoria}
+          placeholder="Sin categoría"
+          options={[
+            { value: "", label: "Sin categoría" },
+            ...CATEGORIAS.map((c) => ({ value: c, label: CATEGORIA_LABEL[c] })),
+          ]}
+        />
       </div>
 
       {/* Copy */}

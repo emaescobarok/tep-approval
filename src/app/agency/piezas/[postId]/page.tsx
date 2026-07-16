@@ -14,7 +14,7 @@ import { CommentThread } from "@/components/comment-thread";
 import { CommentComposer } from "@/components/comment-composer";
 import { getPostParticipants } from "@/lib/mentions";
 import { DeletePostButton } from "../../clientes/[clientId]/delete-post-button";
-import { TIPO_LABEL, type Comment, type Post, type PostMedia } from "@/lib/types";
+import { TIPO_LABEL, CATEGORIA_LABEL, type Comment, type Post, type PostMedia } from "@/lib/types";
 import { formatPublishDate } from "@/lib/utils";
 import { CalendarDays } from "lucide-react";
 import { addAgencyComment } from "./actions";
@@ -116,6 +116,7 @@ export default async function AgencyPiezaPage({
                 postId={postId}
                 clientId={cal!.client_id}
                 tipo={p.tipo}
+                initialCategoria={p.categoria}
                 initialCopy={p.copy ?? ""}
                 initialPublishDate={p.publish_date?.slice(0, 10) ?? ""}
                 initialDriveUrl={p.drive_url ?? ""}
@@ -168,7 +169,14 @@ export default async function AgencyPiezaPage({
             {/* Copy + estado + Drive + comentarios */}
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
-                <Badge>{TIPO_LABEL[p.tipo]}</Badge>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Badge>{TIPO_LABEL[p.tipo]}</Badge>
+                  {p.categoria && (
+                    <Badge className="border-primary/30 bg-primary/10 text-primary">
+                      {CATEGORIA_LABEL[p.categoria]}
+                    </Badge>
+                  )}
+                </div>
                 <StatusBadge estado={p.estado} />
               </div>
               {p.publish_date && (

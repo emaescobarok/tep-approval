@@ -3,6 +3,8 @@
 
 export type UserRole = "agency" | "client";
 export type PostTipo = "carrusel" | "imagen" | "reel_video" | "historia" | "texto";
+// Pilar de contenido. Eje distinto de PostTipo: 'tipo' es el formato, 'categoria' el tema.
+export type PostCategoria = "marca" | "productos" | "resenas" | "promos" | "faq";
 export type PostPlataforma = "instagram" | "facebook" | "tiktok" | "linkedin" | "x";
 export type PostEstado = "pendiente" | "aprobado" | "cambios_pedidos";
 export type MediaTipo = "image" | "video";
@@ -80,6 +82,7 @@ export interface Post {
   id: string;
   calendar_id: string;
   tipo: PostTipo;
+  categoria: PostCategoria | null;
   plataforma: PostPlataforma;
   copy: string | null;
   estado: PostEstado;
@@ -116,6 +119,18 @@ export const TIPO_LABEL: Record<PostTipo, string> = {
   reel_video: "Reel",
   historia: "Historia",
   texto: "Texto",
+};
+
+// Pilares de contenido (fijos para todos los clientes). La categoría es opcional:
+// las piezas cargadas antes de la 0013 quedan sin categoría.
+export const CATEGORIAS: PostCategoria[] = ["marca", "productos", "resenas", "promos", "faq"];
+
+export const CATEGORIA_LABEL: Record<PostCategoria, string> = {
+  marca: "Marca",
+  productos: "Productos",
+  resenas: "Reseñas",
+  promos: "Promos",
+  faq: "FAQ",
 };
 
 // Plataforma por defecto (el selector se sacó del UI, pero el campo es obligatorio en la DB).

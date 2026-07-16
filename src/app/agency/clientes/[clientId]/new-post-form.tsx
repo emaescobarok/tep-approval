@@ -12,6 +12,9 @@ import {
   TIPOS_FORM,
   TIPO_LABEL,
   TIPOS_CON_COPY_OBLIGATORIO,
+  CATEGORIAS,
+  CATEGORIA_LABEL,
+  type PostCategoria,
   type PostTipo,
 } from "@/lib/types";
 import { Upload } from "lucide-react";
@@ -27,6 +30,8 @@ export function NewPostForm({
 }) {
   const router = useRouter();
   const [tipo, setTipo] = useState<PostTipo>("imagen");
+  // "" = sin categoría (es opcional).
+  const [categoria, setCategoria] = useState<PostCategoria | "">("");
   const [publishDate, setPublishDate] = useState("");
   const [copy, setCopy] = useState("");
   const [driveUrl, setDriveUrl] = useState("");
@@ -88,7 +93,8 @@ export function NewPostForm({
     }
 
     const res = await createPost({
-      clientId, month, year, tipo, plataforma: PLATAFORMA_DEFAULT,
+      clientId, month, year, tipo, categoria: categoria || null,
+      plataforma: PLATAFORMA_DEFAULT,
       copy, publishDate, driveUrl, coverPath, media,
     });
     setBusy(false);
@@ -99,6 +105,7 @@ export function NewPostForm({
     setCopy("");
     setDriveUrl("");
     setPublishDate("");
+    setCategoria("");
     setFiles([]);
     setCover(null);
     router.refresh();
@@ -121,6 +128,19 @@ export function NewPostForm({
           </label>
           <DatePicker value={publishDate} onChange={setPublishDate} required />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium">Categoría</label>
+        <Select<PostCategoria | "">
+          value={categoria}
+          onChange={setCategoria}
+          placeholder="Sin categoría"
+          options={[
+            { value: "", label: "Sin categoría" },
+            ...CATEGORIAS.map((c) => ({ value: c, label: CATEGORIA_LABEL[c] })),
+          ]}
+        />
       </div>
 
       <div className="flex flex-col gap-1.5">
