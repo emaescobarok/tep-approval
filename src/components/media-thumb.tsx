@@ -1,18 +1,12 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { type PostPlataforma, type PostTipo, TIPO_LABEL } from "@/lib/types";
+import { TIPO_GRADIENT } from "@/components/tipo-colors";
 import { Image as ImageIcon, Film, LayoutGrid, Clock3, Type } from "lucide-react";
 
 // Degradado por tipo — único lugar del UI con degradados (según el brief).
-// Solo se ve cuando la pieza no tiene imagen. Todos dentro de la familia
-// lima/amarillo para no romper la identidad; se distinguen por matiz.
-const gradients: Record<PostTipo, string> = {
-  carrusel: "from-lime-300 via-lime-500 to-emerald-600",
-  imagen: "from-lime-200 to-lime-500",
-  reel_video: "from-yellow-300 via-lime-400 to-teal-600",
-  historia: "from-amber-300 to-yellow-500",
-  texto: "from-neutral-400 to-neutral-600",
-};
+// Solo se ve cuando la pieza no tiene imagen. Los matices salen de TIPO_GRADIENT
+// para que sean los mismos que los del calendario.
 
 const tipoIcon: Record<PostTipo, React.ComponentType<{ className?: string }>> = {
   carrusel: LayoutGrid,
@@ -42,7 +36,7 @@ export function MediaThumb({
       className={cn(
         "relative flex items-center justify-center overflow-hidden rounded-xl",
         fill ? "absolute inset-0 h-full w-full" : "aspect-square w-full",
-        !url && `bg-gradient-to-br ${gradients[tipo]}`,
+        !url && `bg-gradient-to-br ${TIPO_GRADIENT[tipo]}`,
         className
       )}
     >

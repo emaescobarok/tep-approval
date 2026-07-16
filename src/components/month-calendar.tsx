@@ -1,14 +1,16 @@
 import Link from "next/link";
 import { TIPO_LABEL, ESTADO_LABEL, type Post, type PostEstado } from "@/lib/types";
+import { TIPO_DOT, TIPO_CHIP } from "@/components/tipo-colors";
 import { cn } from "@/lib/utils";
 
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
-// Punto de color por estado (mismo criterio que StatusBadge).
-const dot: Record<PostEstado, string> = {
-  pendiente: "bg-muted-foreground",
-  aprobado: "bg-primary",
-  cambios_pedidos: "bg-warning",
+// El color del chip dice el TIPO; el estado va en el anillo del punto, para no
+// perderlo (antes el punto era el estado y todos los tipos se veían iguales).
+const estadoRing: Record<PostEstado, string> = {
+  pendiente: "ring-1 ring-inset ring-muted-foreground/50",
+  aprobado: "ring-2 ring-inset ring-primary",
+  cambios_pedidos: "ring-2 ring-inset ring-warning",
 };
 
 // Calendario del mes: cada pieza aparece en el día en que se publica.
@@ -78,9 +80,18 @@ export function MonthCalendar({
                       key={p.id}
                       href={`${hrefBase}${p.id}`}
                       title={`${TIPO_LABEL[p.tipo]} · ${ESTADO_LABEL[p.estado]}`}
-                      className="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-1 text-[10px] font-medium leading-tight hover:bg-secondary"
+                      className={cn(
+                        "flex items-center gap-1 rounded-md border px-1.5 py-1 text-[10px] font-medium leading-tight transition-opacity hover:opacity-80",
+                        TIPO_CHIP[p.tipo]
+                      )}
                     >
-                      <span className={cn("size-1.5 shrink-0 rounded-full", dot[p.estado])} />
+                      <span
+                        className={cn(
+                          "size-2 shrink-0 rounded-full",
+                          TIPO_DOT[p.tipo],
+                          estadoRing[p.estado]
+                        )}
+                      />
                       <span className="truncate">{TIPO_LABEL[p.tipo]}</span>
                     </Link>
                   ))}
