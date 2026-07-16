@@ -11,7 +11,7 @@ export function ProgressSummary({ estados }: { estados: PostEstado[] }) {
   const items = [
     { label: "Aprobadas", value: aprobadas, cls: "text-primary" },
     { label: "Pendientes", value: pendientes, cls: "text-muted-foreground" },
-    { label: "Cambios pedidos", value: cambios, cls: "text-warning-foreground" },
+    { label: "Cambios pedidos", value: cambios, cls: "text-warning" },
   ];
 
   return (

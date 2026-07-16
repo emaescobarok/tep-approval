@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MonthSwitcher } from "@/components/month-switcher";
 import { MESES, type PostEstado } from "@/lib/types";
-import { ChevronRight } from "lucide-react";
 import { AddClientForm } from "./add-client-form";
 import { DeleteClientButton } from "./delete-client-button";
 import { ClientLogo } from "@/components/client-logo";
@@ -81,12 +80,11 @@ export default async function AgencyDashboard({
               {isAdmin && <DeleteClientButton clientId={client.id} clientName={client.name} />}
               <Link href={`/agency/clientes/${client.id}?month=${month}&year=${year}`}>
                 <Card className="transition-shadow hover:shadow-md">
-                  <CardHeader className="flex-row items-center justify-between">
+                  <CardHeader>
                     <div className="flex items-center gap-2.5">
                       <ClientLogo name={client.name} logoUrl={client.logo_url} />
                       <CardTitle className="text-base">{client.name}</CardTitle>
                     </div>
-                    <ChevronRight className="size-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent className="flex flex-col gap-3">
                     <div className="flex items-end justify-between">
@@ -98,8 +96,10 @@ export default async function AgencyDashboard({
                     <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                       <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
                     </div>
+                    {/* text-warning, no text-warning-foreground: ese está pensado
+                        para ir ARRIBA del ámbar; suelto queda oscuro sobre oscuro. */}
                     {cambios > 0 && (
-                      <span className="text-xs font-medium text-warning-foreground">
+                      <span className="text-xs font-medium text-warning">
                         {cambios} con cambios pedidos
                       </span>
                     )}

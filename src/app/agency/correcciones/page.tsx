@@ -73,7 +73,7 @@ export default async function CorreccionesPage() {
                     <Badge>{TIPO_LABEL[post.tipo]}</Badge>
                   </div>
                   <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                    <span className="font-medium text-warning-foreground">Último comentario: </span>
+                    <span className="font-medium text-warning">Último comentario: </span>
                     {lastComment[post.id] ?? "—"}
                   </p>
                 </div>
