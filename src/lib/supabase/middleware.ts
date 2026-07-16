@@ -49,25 +49,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Con sesión: chequeo de rol para separar áreas cliente/agencia
-  if (user && (path.startsWith("/agency") || path.startsWith("/client"))) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (profile?.role === "client" && path.startsWith("/agency")) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/client/calendario";
-      return NextResponse.redirect(url);
-    }
-    if (profile?.role === "agency" && path.startsWith("/client")) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/agency/dashboard";
-      return NextResponse.redirect(url);
-    }
-  }
-
+  // La separación cliente/agencia NO se chequea acá a propósito: la hacen los
+  // layouts de cada área (requireAgency / requireClient), que envuelven todas
+  // sus páginas y redirigen a los mismos destinos. Hacerlo también acá costaba
+  // un viaje a `profiles` antes de CADA navegación para repetir un chequeo que
+  // igual se hace al renderizar. El aislamiento real vive en la RLS.
   return response;
 }
