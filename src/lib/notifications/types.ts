@@ -13,5 +13,7 @@ export interface NotificationRow {
   post_id: string | null;
   payload: Record<string, unknown>;
   delivered_at: string | null;
+  attempts: number;
+  last_error: string | null;
   created_at: string;
 }

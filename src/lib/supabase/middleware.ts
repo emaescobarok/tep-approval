@@ -36,7 +36,11 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/auth") ||
     path.startsWith("/forgot-password") ||
     path.startsWith("/reset-password") ||
-    path.startsWith("/invitacion");
+    path.startsWith("/invitacion") ||
+    // El worker de notificaciones lo llama pg_cron, que no tiene sesión: se
+    // autentica con CRON_SECRET en el propio handler. Sin esto el middleware lo
+    // redirige a /login (307) y el handler nunca corre.
+    path.startsWith("/api/notifications/dispatch");
 
   // Sin sesión y ruta protegida -> al login
   if (!user && !isPublic) {

@@ -55,13 +55,31 @@ function render(row: NotificationRow): Omit<OutboundNotification, "to"> {
   return templates[row.type];
 }
 
+export interface DispatchResult {
+  ok: boolean;
+  error?: string;
+}
+
 // Despacha una notificación por todos los canales activos.
-export async function dispatch(row: NotificationRow, to: string | null) {
+//
+// Devuelve ok solo si TODOS los canales entregaron. Un canal que falla no puede
+// quedar en silencio: el worker necesita saberlo para reintentar, si no la
+// notificación se marca entregada y se pierde para siempre.
+export async function dispatch(
+  row: NotificationRow,
+  to: string | null
+): Promise<DispatchResult> {
   const tpl = render(row);
   const payload: OutboundNotification = { ...tpl, to };
-  await Promise.all(
-    channels.map((ch) =>
-      ch.send(payload).catch((e) => console.error(`[notify:${ch.name}]`, e))
-    )
-  );
+
+  const results = await Promise.allSettled(channels.map((ch) => ch.send(payload)));
+
+  const errors = results.flatMap((r, i) => {
+    if (r.status === "fulfilled") return [];
+    const msg = r.reason instanceof Error ? r.reason.message : String(r.reason);
+    console.error(`[notify:${channels[i].name}]`, r.reason);
+    return [`${channels[i].name}: ${msg}`];
+  });
+
+  return errors.length ? { ok: false, error: errors.join(" | ") } : { ok: true };
 }

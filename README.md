@@ -9,7 +9,7 @@ contenido y sus clientes aprueben o comenten cada pieza desde un único lugar.
 
 ## Stack
 
-- **Next.js 15** (App Router, Server Components, Server Actions) + TypeScript
+- **Next.js 16** (App Router, Server Components, Server Actions) + TypeScript
 - **Tailwind v4** + shadcn/ui (sistema visual del template v0: verde + blanco)
 - **Supabase**: Postgres + Auth (email/password) + Storage
 - **Resend** para email (notificaciones desacopladas, listas para sumar Slack/WhatsApp)
@@ -28,14 +28,11 @@ npm install
 ```
 
 ### 2. Proyecto Supabase
-Creá un proyecto en [supabase.com](https://supabase.com) y corré las migraciones
-en orden (SQL Editor o `supabase db push`):
-```
-supabase/migrations/0001_schema.sql
-supabase/migrations/0002_rls.sql
-supabase/migrations/0003_triggers_notifications.sql
-supabase/migrations/0004_storage.sql
-```
+Creá un proyecto en [supabase.com](https://supabase.com) y corré **todas** las
+migraciones de `supabase/migrations/` en orden numérico (SQL Editor o
+`supabase db push`). La `0018` necesita dos secretos cargados en el Vault antes
+de correrla: están documentados al inicio del archivo.
+
 (Opcional) Cargá datos demo con `supabase/seed.sql`.
 
 ### 3. Variables de entorno
@@ -64,12 +61,21 @@ Desde ahí invitás usuarios cliente (reciben email para definir su contraseña)
 Modelo **desacoplado en 3 capas**:
 1. **Triggers** en Postgres (`0003`) insertan filas en `notifications` cuando el
    cliente comenta/aprueba/pide cambios o la agencia resuelve una corrección.
-2. **Worker** (`/api/notifications/dispatch`) lee la cola y envía por los canales
-   activos. Protegido con `CRON_SECRET`. Ejecutar por cron:
+2. **Worker** (`/api/notifications/dispatch`) lee la cola, envía por los canales
+   activos y marca `delivered_at` **solo** si el envío salió bien. Si falla,
+   suma `attempts` y guarda `last_error`; reintenta hasta 5 veces y después
+   desiste. Protegido con `CRON_SECRET`. Para dispararlo a mano:
    ```bash
    curl -X POST https://TU-APP/api/notifications/dispatch -H "x-cron-secret: $CRON_SECRET"
    ```
-   (`vercel.json` ya define un cron cada 5 min.)
+   El cron lo corre **pg_cron dentro de Supabase** cada 5 min (`0018`), no
+   Vercel: el plan Hobby solo permite un cron por día. Requiere cargar dos
+   secretos en el Vault, ver las instrucciones al inicio de esa migración.
+   Para ver la cola pendiente:
+   ```sql
+   select type, attempts, last_error, created_at from notifications
+   where delivered_at is null order by created_at;
+   ```
 3. **Adapters de canal** (`src/lib/notifications/providers/`): hoy `email.ts`
    (Resend). Para sumar Slack/WhatsApp, creá otro adapter que implemente
    `NotificationChannel` y agregalo al array `channels` en `index.ts`.
