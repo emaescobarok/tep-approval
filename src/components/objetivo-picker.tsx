@@ -18,7 +18,7 @@ const OBJETIVO_ICON: Record<PostObjetivo, typeof Sparkles> = {
 export const OBJETIVO_OTRO_MAX = 40;
 
 // Selector de objetivo: círculos con ícono. Con 'otro' se despliega un texto libre.
-// El objetivo es opcional, así que volver a tocar el elegido lo deselecciona.
+// El objetivo es obligatorio (0015): no se puede deseleccionar, solo cambiar.
 export function ObjetivoPicker({
   value,
   onChange,
@@ -42,12 +42,12 @@ export function ObjetivoPicker({
               type="button"
               role="radio"
               aria-checked={active}
-              title={active ? "Tocá de nuevo para quitar el objetivo" : OBJETIVO_LABEL[o]}
+              title={OBJETIVO_LABEL[o]}
               onClick={() => {
                 // Al cambiar de objetivo el texto libre deja de aplicar (la DB
                 // exige objetivo_otro null cuando el objetivo no es 'otro').
                 if (o !== "otro") onOtroChange("");
-                onChange(active ? "" : o);
+                onChange(o);
               }}
               className="flex w-16 flex-col items-center gap-1.5 rounded-lg py-1 outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >

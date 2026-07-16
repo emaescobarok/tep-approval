@@ -82,7 +82,7 @@ export interface Post {
   id: string;
   calendar_id: string;
   tipo: PostTipo;
-  objetivo: PostObjetivo | null;
+  objetivo: PostObjetivo; // obligatorio desde la 0015
   objetivo_otro: string | null; // solo cuando objetivo === 'otro'
   plataforma: PostPlataforma;
   copy: string | null;
@@ -122,8 +122,7 @@ export const TIPO_LABEL: Record<PostTipo, string> = {
   texto: "Texto",
 };
 
-// Objetivos (fijos para todos los clientes). El objetivo es opcional: las piezas
-// cargadas antes de la 0013 quedan sin objetivo.
+// Objetivos (fijos para todos los clientes). Obligatorio desde la 0015.
 export const OBJETIVOS: PostObjetivo[] = ["marca", "productos", "resenas", "promos", "faq", "otro"];
 
 export const OBJETIVO_LABEL: Record<PostObjetivo, string> = {
@@ -136,8 +135,7 @@ export const OBJETIVO_LABEL: Record<PostObjetivo, string> = {
 };
 
 // Texto a mostrar: si es 'otro', se muestra lo que escribió la agencia.
-export function objetivoLabel(p: { objetivo: PostObjetivo | null; objetivo_otro: string | null }) {
-  if (!p.objetivo) return null;
+export function objetivoLabel(p: { objetivo: PostObjetivo; objetivo_otro: string | null }): string {
   if (p.objetivo === "otro") return p.objetivo_otro?.trim() || OBJETIVO_LABEL.otro;
   return OBJETIVO_LABEL[p.objetivo];
 }
