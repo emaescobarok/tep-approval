@@ -3,14 +3,13 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink, CalendarDays } from "lucide-react";
 import { NavArrow } from "@/components/nav-arrow";
-import { formatPublishDate } from "@/lib/utils";
+import { formatPublishDate, cn } from "@/lib/utils";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { signedUrls } from "@/lib/media";
 import { Topbar } from "@/components/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { CommentThread } from "@/components/comment-thread";
 import { CommentComposer } from "@/components/comment-composer";
@@ -23,6 +22,7 @@ import {
   type PostMedia,
 } from "@/lib/types";
 import { approvePost, requestChanges, addComment } from "./actions";
+import { DecisionBox } from "./decision-box";
 
 export default async function PiezaPage({
   params,
@@ -110,8 +110,10 @@ export default async function PiezaPage({
                   className="h-auto w-full rounded-xl"
                 />
               )}
+              {/* Con una sola media va a ancho completo: en 2 columnas fijas, una
+                  historia o una placa suelta quedaban a media columna. */}
               {media.length ? (
-                <div className="grid grid-cols-2 gap-2">
+                <div className={cn("grid gap-2", media.length > 1 && "grid-cols-2")}>
                   {media.map((m, i) =>
                     m.media_type === "video" ? (
                       <video key={m.id} src={urls[i] ?? undefined} controls className="w-full rounded-xl" />
@@ -165,24 +167,7 @@ export default async function PiezaPage({
               )}
 
               {/* Decisión */}
-              <div className="flex flex-col gap-2 border-t border-border pt-4">
-                {p.estado !== "aprobado" && (
-                  <form action={approve}>
-                    <Button type="submit" className="w-full">Aprobar pieza</Button>
-                  </form>
-                )}
-                <form action={reqChanges} className="flex flex-col gap-2">
-                  <label className="text-sm font-medium">Pedir cambios</label>
-                  <textarea
-                    name="comment" required rows={3}
-                    placeholder="Contanos qué querés ajustar..."
-                    className="rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <Button type="submit" variant="warning" className="w-full">
-                    Enviar corrección
-                  </Button>
-                </form>
-              </div>
+              <DecisionBox estado={p.estado} approve={approve} requestChanges={reqChanges} />
 
               {/* Comentarios */}
               <div className="flex flex-col gap-3 border-t border-border pt-4">
