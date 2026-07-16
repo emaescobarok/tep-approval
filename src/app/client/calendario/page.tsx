@@ -83,7 +83,7 @@ export default async function CalendarioPage({
             <CardHeader><CardTitle className="text-base">Planificación del mes</CardTitle></CardHeader>
             <CardContent>
               <div
-                className="prose-intro text-sm leading-relaxed text-muted-foreground"
+                className="prose-intro text-sm leading-relaxed text-foreground/90"
                 dangerouslySetInnerHTML={{ __html: sanitizeIntroHtml(calendar.intro) }}
               />
             </CardContent>

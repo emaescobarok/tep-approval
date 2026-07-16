@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateIntro } from "./actions";
+import { sanitizeIntroHtml } from "@/lib/sanitize";
 import { Button } from "@/components/ui/button";
 import {
   Save,
@@ -13,6 +14,8 @@ import {
   ListOrdered,
   Link as LinkIcon,
   Eraser,
+  Pencil,
+  Plus,
 } from "lucide-react";
 
 type Cmd = { icon: React.ReactNode; title: string; run: () => void };
@@ -32,9 +35,11 @@ export function IntroEditor({
 }) {
   const router = useRouter();
   const editorRef = useRef<HTMLDivElement>(null);
+  const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [empty, setEmpty] = useState(!initial);
+  // Lo guardado, para poder mostrarlo de solo lectura sin esperar el refresh.
+  const [html, setHtml] = useState(initial ?? "");
 
   function exec(command: string, value?: string) {
     editorRef.current?.focus();
@@ -74,15 +79,45 @@ export function IntroEditor({
 
   async function save() {
     setBusy(true);
-    setSaved(false);
-    const html = editorRef.current?.innerHTML ?? "";
+    const current = editorRef.current?.innerHTML ?? "";
     // Si quedó vacío, guardamos null para que no se muestre la tarjeta al cliente.
-    const cleaned = editorRef.current?.textContent?.trim() ? html : "";
+    const cleaned = editorRef.current?.textContent?.trim() ? current : "";
     await updateIntro({ clientId, month, year, intro: cleaned });
     setBusy(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setHtml(cleaned);
+    setEmpty(!cleaned);
+    setEditing(false);
     router.refresh();
+  }
+
+  // Vista de lectura: es el estado por defecto. El editor solo aparece al tocar
+  // "Editar", así la intro no se come el arranque de la página.
+  if (!editing) {
+    return (
+      <div className="flex flex-col items-start gap-3">
+        {html ? (
+          <div
+            className="prose-intro text-sm leading-relaxed text-foreground/90"
+            dangerouslySetInnerHTML={{ __html: sanitizeIntroHtml(html) }}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Sin introducción. La cuenta la ve arriba de su calendario.
+          </p>
+        )}
+        <Button type="button" size="sm" variant="outline" onClick={() => setEditing(true)}>
+          {html ? (
+            <>
+              <Pencil className="size-4" /> Editar introducción
+            </>
+          ) : (
+            <>
+              <Plus className="size-4" /> Agregar introducción
+            </>
+          )}
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -108,7 +143,7 @@ export function IntroEditor({
           suppressContentEditableWarning
           onInput={syncEmpty}
           onPaste={handlePaste}
-          dangerouslySetInnerHTML={{ __html: initial ?? "" }}
+          dangerouslySetInnerHTML={{ __html: html }}
           className="prose-intro min-h-28 -mt-2 rounded-b-lg border border-border bg-card px-3 py-2 text-sm leading-relaxed outline-none focus:ring-0"
         />
         {empty && (
@@ -121,7 +156,19 @@ export function IntroEditor({
         <Button type="button" size="sm" onClick={save} disabled={busy}>
           <Save className="size-4" /> {busy ? "Guardando..." : "Guardar introducción"}
         </Button>
-        {saved && <span className="text-sm text-primary">Guardado ✓</span>}
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={busy}
+          // Descarta lo tipeado: el editor se remonta con el html guardado.
+          onClick={() => {
+            setEditing(false);
+            setEmpty(!html);
+          }}
+        >
+          Cancelar
+        </Button>
       </div>
     </div>
   );
