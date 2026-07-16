@@ -14,7 +14,7 @@ import { CommentThread } from "@/components/comment-thread";
 import { CommentComposer } from "@/components/comment-composer";
 import { getPostParticipants } from "@/lib/mentions";
 import { DeletePostButton } from "../../clientes/[clientId]/delete-post-button";
-import { TIPO_LABEL, CATEGORIA_LABEL, type Comment, type Post, type PostMedia } from "@/lib/types";
+import { TIPO_LABEL, objetivoLabel, type Comment, type Post, type PostMedia } from "@/lib/types";
 import { formatPublishDate } from "@/lib/utils";
 import { CalendarDays } from "lucide-react";
 import { addAgencyComment } from "./actions";
@@ -116,7 +116,8 @@ export default async function AgencyPiezaPage({
                 postId={postId}
                 clientId={cal!.client_id}
                 tipo={p.tipo}
-                initialCategoria={p.categoria}
+                initialObjetivo={p.objetivo}
+                initialObjetivoOtro={p.objetivo_otro ?? ""}
                 initialCopy={p.copy ?? ""}
                 initialPublishDate={p.publish_date?.slice(0, 10) ?? ""}
                 initialDriveUrl={p.drive_url ?? ""}
@@ -171,9 +172,9 @@ export default async function AgencyPiezaPage({
               <div className="flex items-center justify-between">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <Badge>{TIPO_LABEL[p.tipo]}</Badge>
-                  {p.categoria && (
-                    <Badge className="border-primary/30 bg-primary/10 text-primary">
-                      {CATEGORIA_LABEL[p.categoria]}
+                  {objetivoLabel(p) && (
+                    <Badge className="border-accent/30 bg-accent/10 text-accent">
+                      {objetivoLabel(p)}
                     </Badge>
                   )}
                 </div>

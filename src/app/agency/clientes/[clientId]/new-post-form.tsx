@@ -7,14 +7,13 @@ import { createPost } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { ObjetivoPicker } from "@/components/objetivo-picker";
 import {
   PLATAFORMA_DEFAULT,
   TIPOS_FORM,
   TIPO_LABEL,
   TIPOS_CON_COPY_OBLIGATORIO,
-  CATEGORIAS,
-  CATEGORIA_LABEL,
-  type PostCategoria,
+  type PostObjetivo,
   type PostTipo,
 } from "@/lib/types";
 import { Upload } from "lucide-react";
@@ -30,8 +29,9 @@ export function NewPostForm({
 }) {
   const router = useRouter();
   const [tipo, setTipo] = useState<PostTipo>("imagen");
-  // "" = sin categoría (es opcional).
-  const [categoria, setCategoria] = useState<PostCategoria | "">("");
+  // "" = sin objetivo (es opcional).
+  const [objetivo, setObjetivo] = useState<PostObjetivo | "">("");
+  const [objetivoOtro, setObjetivoOtro] = useState("");
   const [publishDate, setPublishDate] = useState("");
   const [copy, setCopy] = useState("");
   const [driveUrl, setDriveUrl] = useState("");
@@ -49,6 +49,10 @@ export function NewPostForm({
 
     if (copyRequired && !copy.trim()) {
       setError("El copy es obligatorio para carrusel y texto.");
+      return;
+    }
+    if (objetivo === "otro" && !objetivoOtro.trim()) {
+      setError("Escribí cuál es el objetivo.");
       return;
     }
     if (!publishDate) {
@@ -93,7 +97,8 @@ export function NewPostForm({
     }
 
     const res = await createPost({
-      clientId, month, year, tipo, categoria: categoria || null,
+      clientId, month, year, tipo,
+      objetivo: objetivo || null, objetivoOtro,
       plataforma: PLATAFORMA_DEFAULT,
       copy, publishDate, driveUrl, coverPath, media,
     });
@@ -105,7 +110,8 @@ export function NewPostForm({
     setCopy("");
     setDriveUrl("");
     setPublishDate("");
-    setCategoria("");
+    setObjetivo("");
+    setObjetivoOtro("");
     setFiles([]);
     setCover(null);
     router.refresh();
@@ -131,15 +137,14 @@ export function NewPostForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">Categoría</label>
-        <Select<PostCategoria | "">
-          value={categoria}
-          onChange={setCategoria}
-          placeholder="Sin categoría"
-          options={[
-            { value: "", label: "Sin categoría" },
-            ...CATEGORIAS.map((c) => ({ value: c, label: CATEGORIA_LABEL[c] })),
-          ]}
+        <label className="text-sm font-medium">
+          Objetivo <span className="text-muted-foreground">(opcional)</span>
+        </label>
+        <ObjetivoPicker
+          value={objetivo}
+          onChange={setObjetivo}
+          otro={objetivoOtro}
+          onOtroChange={setObjetivoOtro}
         />
       </div>
 

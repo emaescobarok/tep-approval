@@ -6,13 +6,11 @@ import { createClient } from "@/lib/supabase/client";
 import { updatePost } from "../../clientes/[clientId]/actions";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Select } from "@/components/ui/select";
+import { ObjetivoPicker } from "@/components/objetivo-picker";
 import {
   TIPOS_CON_COPY_OBLIGATORIO,
-  CATEGORIAS,
-  CATEGORIA_LABEL,
   type MediaTipo,
-  type PostCategoria,
+  type PostObjetivo,
   type PostTipo,
 } from "@/lib/types";
 import { Upload, GripVertical, X, ImageOff } from "lucide-react";
@@ -31,7 +29,8 @@ export function EditPostForm({
   postId,
   clientId,
   tipo,
-  initialCategoria,
+  initialObjetivo,
+  initialObjetivoOtro,
   initialCopy,
   initialPublishDate,
   initialDriveUrl,
@@ -42,7 +41,8 @@ export function EditPostForm({
   postId: string;
   clientId: string;
   tipo: PostTipo;
-  initialCategoria: PostCategoria | null;
+  initialObjetivo: PostObjetivo | null;
+  initialObjetivoOtro: string;
   initialCopy: string;
   initialPublishDate: string;
   initialDriveUrl: string;
@@ -54,8 +54,9 @@ export function EditPostForm({
   const isReel = tipo === "reel_video";
   const copyRequired = TIPOS_CON_COPY_OBLIGATORIO.includes(tipo);
 
-  // "" = sin categoría (es opcional).
-  const [categoria, setCategoria] = useState<PostCategoria | "">(initialCategoria ?? "");
+  // "" = sin objetivo (es opcional).
+  const [objetivo, setObjetivo] = useState<PostObjetivo | "">(initialObjetivo ?? "");
+  const [objetivoOtro, setObjetivoOtro] = useState(initialObjetivoOtro);
   const [copy, setCopy] = useState(initialCopy);
   const [publishDate, setPublishDate] = useState(initialPublishDate);
   const [driveUrl, setDriveUrl] = useState(initialDriveUrl);
@@ -128,6 +129,10 @@ export function EditPostForm({
       setError("El copy es obligatorio para carrusel y texto.");
       return;
     }
+    if (objetivo === "otro" && !objetivoOtro.trim()) {
+      setError("Escribí cuál es el objetivo.");
+      return;
+    }
     if (!publishDate) {
       setError("Elegí la fecha de publicación.");
       return;
@@ -173,7 +178,8 @@ export function EditPostForm({
       postId,
       clientId,
       tipo,
-      categoria: categoria || null,
+      objetivo: objetivo || null,
+      objetivoOtro,
       copy,
       publishDate,
       driveUrl,
@@ -267,17 +273,16 @@ export function EditPostForm({
         </label>
       </div>
 
-      {/* Categoría */}
+      {/* Objetivo */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">Categoría</label>
-        <Select<PostCategoria | "">
-          value={categoria}
-          onChange={setCategoria}
-          placeholder="Sin categoría"
-          options={[
-            { value: "", label: "Sin categoría" },
-            ...CATEGORIAS.map((c) => ({ value: c, label: CATEGORIA_LABEL[c] })),
-          ]}
+        <label className="text-sm font-medium">
+          Objetivo <span className="text-muted-foreground">(opcional)</span>
+        </label>
+        <ObjetivoPicker
+          value={objetivo}
+          onChange={setObjetivo}
+          otro={objetivoOtro}
+          onOtroChange={setObjetivoOtro}
         />
       </div>
 

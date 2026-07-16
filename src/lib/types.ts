@@ -3,8 +3,8 @@
 
 export type UserRole = "agency" | "client";
 export type PostTipo = "carrusel" | "imagen" | "reel_video" | "historia" | "texto";
-// Pilar de contenido. Eje distinto de PostTipo: 'tipo' es el formato, 'categoria' el tema.
-export type PostCategoria = "marca" | "productos" | "resenas" | "promos" | "faq";
+// Objetivo de la pieza. Eje distinto de PostTipo: 'tipo' es el formato, 'objetivo' el para qué.
+export type PostObjetivo = "marca" | "productos" | "resenas" | "promos" | "faq" | "otro";
 export type PostPlataforma = "instagram" | "facebook" | "tiktok" | "linkedin" | "x";
 export type PostEstado = "pendiente" | "aprobado" | "cambios_pedidos";
 export type MediaTipo = "image" | "video";
@@ -82,7 +82,8 @@ export interface Post {
   id: string;
   calendar_id: string;
   tipo: PostTipo;
-  categoria: PostCategoria | null;
+  objetivo: PostObjetivo | null;
+  objetivo_otro: string | null; // solo cuando objetivo === 'otro'
   plataforma: PostPlataforma;
   copy: string | null;
   estado: PostEstado;
@@ -121,17 +122,25 @@ export const TIPO_LABEL: Record<PostTipo, string> = {
   texto: "Texto",
 };
 
-// Pilares de contenido (fijos para todos los clientes). La categoría es opcional:
-// las piezas cargadas antes de la 0013 quedan sin categoría.
-export const CATEGORIAS: PostCategoria[] = ["marca", "productos", "resenas", "promos", "faq"];
+// Objetivos (fijos para todos los clientes). El objetivo es opcional: las piezas
+// cargadas antes de la 0013 quedan sin objetivo.
+export const OBJETIVOS: PostObjetivo[] = ["marca", "productos", "resenas", "promos", "faq", "otro"];
 
-export const CATEGORIA_LABEL: Record<PostCategoria, string> = {
+export const OBJETIVO_LABEL: Record<PostObjetivo, string> = {
   marca: "Marca",
   productos: "Productos",
   resenas: "Reseñas",
   promos: "Promos",
   faq: "FAQ",
+  otro: "Otro",
 };
+
+// Texto a mostrar: si es 'otro', se muestra lo que escribió la agencia.
+export function objetivoLabel(p: { objetivo: PostObjetivo | null; objetivo_otro: string | null }) {
+  if (!p.objetivo) return null;
+  if (p.objetivo === "otro") return p.objetivo_otro?.trim() || OBJETIVO_LABEL.otro;
+  return OBJETIVO_LABEL[p.objetivo];
+}
 
 // Plataforma por defecto (el selector se sacó del UI, pero el campo es obligatorio en la DB).
 export const PLATAFORMA_DEFAULT: PostPlataforma = "instagram";

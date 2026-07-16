@@ -6,7 +6,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { createInvitedUser, type InviteResult } from "@/lib/invites";
 import {
   TIPOS_CON_COPY_OBLIGATORIO,
-  type PostCategoria,
+  type PostObjetivo,
   type PostPlataforma,
   type PostTipo,
   type MediaTipo,
@@ -35,6 +35,18 @@ async function ensureCalendar(clientId: string, month: number, year: number) {
 
 type MediaInput = { storage_path: string; media_type: MediaTipo };
 
+// Normaliza el par objetivo/objetivo_otro según el CHECK de la DB (0014):
+// el texto libre es obligatorio con 'otro' y debe ser null con cualquier otro.
+function normalizeObjetivo(objetivo?: PostObjetivo | null, otro?: string) {
+  const otroTrim = (otro ?? "").trim();
+  if (!objetivo) return { ok: true as const, objetivo: null, objetivo_otro: null };
+  if (objetivo === "otro") {
+    if (!otroTrim) return { ok: false as const, error: "Escribí cuál es el objetivo." };
+    return { ok: true as const, objetivo, objetivo_otro: otroTrim };
+  }
+  return { ok: true as const, objetivo, objetivo_otro: null };
+}
+
 // Crea una pieza. Los archivos ya fueron subidos a Storage por el cliente-browser;
 // acá solo persistimos las filas. La validación de copy también vive en la DB (CHECK).
 export async function createPost(input: {
@@ -42,7 +54,8 @@ export async function createPost(input: {
   month: number;
   year: number;
   tipo: PostTipo;
-  categoria?: PostCategoria | null;
+  objetivo?: PostObjetivo | null;
+  objetivoOtro?: string;
   plataforma: PostPlataforma;
   copy: string;
   publishDate?: string | null;
@@ -60,6 +73,8 @@ export async function createPost(input: {
   if (!input.publishDate) {
     return { ok: false, error: "Elegí la fecha de publicación." };
   }
+  const obj = normalizeObjetivo(input.objetivo, input.objetivoOtro);
+  if (!obj.ok) return { ok: false, error: obj.error };
 
   const calendarId = await ensureCalendar(input.clientId, input.month, input.year);
 
@@ -68,7 +83,8 @@ export async function createPost(input: {
     .insert({
       calendar_id: calendarId,
       tipo: input.tipo,
-      categoria: input.categoria ?? null,
+      objetivo: obj.objetivo,
+      objetivo_otro: obj.objetivo_otro,
       plataforma: input.plataforma,
       copy: copyTrim || null,
       publish_date: input.publishDate,
@@ -100,7 +116,8 @@ export async function updatePost(input: {
   postId: string;
   clientId: string;
   tipo: PostTipo;
-  categoria?: PostCategoria | null;
+  objetivo?: PostObjetivo | null;
+  objetivoOtro?: string;
   copy: string;
   publishDate?: string | null;
   driveUrl?: string;
@@ -118,11 +135,14 @@ export async function updatePost(input: {
   if (!input.publishDate) {
     return { ok: false, error: "Elegí la fecha de publicación." };
   }
+  const obj = normalizeObjetivo(input.objetivo, input.objetivoOtro);
+  if (!obj.ok) return { ok: false, error: obj.error };
 
   const { error: upErr } = await supabase
     .from("posts")
     .update({
-      categoria: input.categoria ?? null,
+      objetivo: obj.objetivo,
+      objetivo_otro: obj.objetivo_otro,
       copy: copyTrim || null,
       publish_date: input.publishDate,
       drive_url: input.driveUrl?.trim() || null,

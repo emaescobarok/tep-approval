@@ -17,7 +17,7 @@ import { CommentComposer } from "@/components/comment-composer";
 import { getPostParticipants } from "@/lib/mentions";
 import {
   TIPO_LABEL,
-  CATEGORIA_LABEL,
+  objetivoLabel,
   type Comment,
   type Post,
   type PostMedia,
@@ -131,9 +131,9 @@ export default async function PiezaPage({
               <div className="flex items-center justify-between">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <Badge>{TIPO_LABEL[p.tipo]}</Badge>
-                  {p.categoria && (
-                    <Badge className="border-primary/30 bg-primary/10 text-primary">
-                      {CATEGORIA_LABEL[p.categoria]}
+                  {objetivoLabel(p) && (
+                    <Badge className="border-accent/30 bg-accent/10 text-accent">
+                      {objetivoLabel(p)}
                     </Badge>
                   )}
                 </div>
