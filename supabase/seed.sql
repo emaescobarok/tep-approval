@@ -27,13 +27,14 @@ values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
 on conflict do nothing;
 
 -- Piezas de ejemplo (sin media; la miniatura muestra el degradado)
-insert into posts (calendar_id, tipo, plataforma, copy, estado, position) values
+-- `objetivo` es obligatorio desde 0015: sin él, el seed falla.
+insert into posts (calendar_id, tipo, plataforma, copy, objetivo, estado, position) values
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'carrusel', 'instagram',
-   '5 razones para empezar el día con un buen café ☕️', 'pendiente', 0),
+   '5 razones para empezar el día con un buen café ☕️', 'marca', 'pendiente', 0),
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'reel_video', 'instagram',
-   null, 'aprobado', 1),
+   null, 'productos', 'aprobado', 1),
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'imagen', 'facebook',
-   'Nuevo blend de la casa, ya disponible.', 'cambios_pedidos', 2),
+   'Nuevo blend de la casa, ya disponible.', 'promos', 'cambios_pedidos', 2),
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'texto', 'linkedin',
-   'Cómo elegimos nuestros granos de origen: un hilo.', 'pendiente', 3)
+   'Cómo elegimos nuestros granos de origen: un hilo.', 'faq', 'pendiente', 3)
 on conflict do nothing;
