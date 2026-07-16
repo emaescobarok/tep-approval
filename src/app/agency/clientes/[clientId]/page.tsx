@@ -11,7 +11,7 @@ import { ViewToggle } from "@/components/view-toggle";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MESES, TIPO_LABEL, type Post } from "@/lib/types";
+import { MESES, TIPO_LABEL, objetivoLabel, type Post } from "@/lib/types";
 import { NewPostForm } from "./new-post-form";
 import { InviteForm } from "./invite-form";
 import { AssignmentToggle } from "../../equipo/assignment-toggle";
@@ -140,10 +140,21 @@ export default async function AgencyClientPage({
                     >
                       <MediaThumb tipo={post.tipo} url={thumbs[post.id]} fill className="transition-transform duration-200 group-hover:scale-[1.03]" />
                       {/* Fecha + tipo sobre la imagen */}
-                      <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-1 bg-gradient-to-b from-black/50 to-transparent p-2">
-                        <Badge className="bg-black/50 text-white backdrop-blur-sm">{TIPO_LABEL[post.tipo]}</Badge>
+                      <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-1 bg-gradient-to-b from-black/50 to-transparent p-2">
+                        <div className="flex min-w-0 flex-wrap items-center gap-1">
+                          <Badge className="bg-black/50 text-white backdrop-blur-sm">{TIPO_LABEL[post.tipo]}</Badge>
+                          {objetivoLabel(post) && (
+                            // max-w + truncate: un objetivo 'otro' puede traer hasta 40 caracteres.
+                            <Badge
+                              title={objetivoLabel(post)!}
+                              className="max-w-[7rem] bg-accent/80 text-white backdrop-blur-sm"
+                            >
+                              <span className="truncate">{objetivoLabel(post)}</span>
+                            </Badge>
+                          )}
+                        </div>
                         {post.publish_date && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-white drop-shadow">
+                          <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-white drop-shadow">
                             <CalendarDays className="size-3" /> {formatPublishDate(post.publish_date)}
                           </span>
                         )}
