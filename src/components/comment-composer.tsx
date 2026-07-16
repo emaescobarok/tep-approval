@@ -3,7 +3,13 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { MentionText } from "@/components/mention-text";
 import type { Participant } from "@/lib/mentions";
+
+// El textarea y la capa de resaltado tienen que dibujar el texto EXACTAMENTE en
+// el mismo lugar, así que comparten tipografía, padding y borde. Si tocás uno,
+// tocá el otro o el texto empieza a bailar.
+const TEXT_BOX = "w-full rounded-lg border px-3 py-2 text-sm leading-normal";
 
 // Caja de comentario con autocompletado de menciones (@usuario).
 // El servidor recalcula las menciones a partir del texto: acá solo ayudamos
@@ -20,9 +26,12 @@ export function CommentComposer({
   submitLabel?: string;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+
+  const labels = participants.map((p) => p.label);
 
   const matches = open
     ? participants
@@ -68,6 +77,24 @@ export function CommentComposer({
       className="relative flex flex-col gap-2"
     >
       <div className="relative">
+        {/* Capa de resaltado: dibuja el texto con las menciones pintadas. Un
+            textarea no puede estilar partes de su contenido, así que el de arriba
+            va con el texto transparente y solo aporta el cursor y la edición. */}
+        <div
+          ref={backdropRef}
+          aria-hidden
+          className={cn(
+            TEXT_BOX,
+            "pointer-events-none absolute inset-0 overflow-hidden whitespace-pre-wrap break-words border-transparent bg-card text-foreground"
+          )}
+        >
+          {/* font-normal a propósito: la negrita ensancha el texto y lo
+              desalinearía del cursor del textarea, que no la tiene. */}
+          <MentionText text={value} labels={labels} className="font-normal" />
+          {/* El textarea deja una línea de más al terminar en \n; esto la iguala. */}
+          {value.endsWith("\n") && " "}
+        </div>
+
         <textarea
           ref={ref}
           name="comment"
@@ -76,8 +103,15 @@ export function CommentComposer({
           value={value}
           onChange={onChange}
           onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
+          onScroll={(e) => {
+            if (backdropRef.current) backdropRef.current.scrollTop = e.currentTarget.scrollTop;
+          }}
           placeholder={placeholder}
-          className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+          className={cn(
+            TEXT_BOX,
+            "relative resize-none border-input bg-transparent text-transparent caret-foreground outline-none",
+            "placeholder:text-muted-foreground selection:bg-primary/30 focus:ring-2 focus:ring-ring"
+          )}
         />
 
         {open && matches.length > 0 && (
