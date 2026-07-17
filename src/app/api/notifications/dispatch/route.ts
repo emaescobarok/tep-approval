@@ -85,9 +85,15 @@ async function handle(request: NextRequest) {
 
     if (result.ok) {
       sent++;
+      // last_error se limpia: si salió en el reintento, dejar el error del
+      // intento anterior hace que una fila entregada parezca fallada.
       await admin
         .from("notifications")
-        .update({ delivered_at: new Date().toISOString(), attempts: row.attempts + 1 })
+        .update({
+          delivered_at: new Date().toISOString(),
+          attempts: row.attempts + 1,
+          last_error: null,
+        })
         .eq("id", row.id);
     } else {
       failed++;
