@@ -39,10 +39,14 @@ export default async function AgencyClientPage({
 
   // Tanda 1: nada de esto depende de lo otro, va todo junto. Los estrategas y
   // las asignaciones solo se renderizan para managers, así que ni se piden si no.
-  const [{ data: client }, { data: users }, { data: strat }, { data: asg }, { data: calendar }] =
+  const [{ data: client }, { data: memberRows }, { data: strat }, { data: asg }, { data: calendar }] =
     await Promise.all([
       supabase.from("clients").select("*").eq("id", clientId).maybeSingle(),
-      supabase.from("profiles").select("id, full_name").eq("client_id", clientId),
+      // Usuarios de la cuenta = miembros (no solo los que la tienen activa).
+      supabase
+        .from("client_members")
+        .select("profile:profiles(id, full_name)")
+        .eq("client_id", clientId),
       manager
         ? supabase
             .from("profiles")
@@ -58,6 +62,11 @@ export default async function AgencyClientPage({
         .eq("client_id", clientId).eq("month", month).eq("year", year).maybeSingle(),
     ]);
   if (!client) notFound();
+
+  // Aplana los miembros a { id, full_name }. La membresía sin profile se descarta.
+  const users = ((memberRows as { profile: { id: string; full_name: string | null } | null }[] | null) ?? [])
+    .map((r) => r.profile)
+    .filter((p): p is { id: string; full_name: string | null } => !!p);
 
   const strategists: { id: string; full_name: string | null }[] = strat ?? [];
   const assignedStrategistIds = new Set((asg ?? []).map((a) => a.agency_id));

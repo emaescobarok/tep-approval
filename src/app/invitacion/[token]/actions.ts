@@ -27,22 +27,29 @@ export async function acceptInvitation(
 
   const email = String(inv.email);
 
-  // Crear la cuenta de acceso. Una invitación SOLO crea cuentas nuevas.
+  // Crear la cuenta de acceso.
   //
   // Antes, si createUser fallaba, se asumía "el email ya existía" y se le seteaba
   // la contraseña igual. Eso era escalación de privilegios: un PM puede invitar
   // gente de agencia, así que podía invitar el email del super admin, aceptar él
   // mismo el link y quedarse con la cuenta. Aceptar una invitación nunca puede
-  // tocar una cuenta que ya existe.
-  //
-  // Rechazar no deja a nadie afuera: borrar un usuario hace deleteUser(), que
-  // borra la fila de auth.users, así que re-invitar un email borrado funciona.
+  // tocar una cuenta de agencia que ya existe ni cambiarle la contraseña.
   const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+
   if (created.error || !created.data?.user) {
     const yaExiste =
       created.error?.code === "email_exists" ||
       created.error?.status === 422 ||
       /already|exists|registered/i.test(created.error?.message ?? "");
+
+    // Caso multi-cuenta: el email YA tiene login y la invitación es de cliente.
+    // Es el mismo dueño sumando otra cuenta. No se toca la cuenta existente ni su
+    // contraseña: se exige la contraseña ACTUAL (signInWithPassword lo prueba) y
+    // solo se agrega una membresía a la cuenta invitada. Nunca escala privilegios.
+    if (yaExiste && inv.role === "client") {
+      return linkExistingClient(inv, email, password);
+    }
+
     return {
       ok: false,
       error: yaExiste
@@ -70,10 +77,57 @@ export async function acceptInvitation(
     return { ok: false, error: profErr.message };
   }
 
+  // Membresía a la cuenta invitada (fuente de verdad del acceso del cliente).
+  if (inv.role === "client" && inv.client_id) {
+    await admin
+      .from("client_members")
+      .upsert({ user_id: userId, client_id: inv.client_id }, { onConflict: "user_id,client_id" });
+  }
+
   await admin.from("invitations").update({ used_at: new Date().toISOString() }).eq("id", inv.id);
 
   // Inicia sesión y entra al área correspondiente.
   const supabase = await createClient();
   await supabase.auth.signInWithPassword({ email, password });
   redirect(inv.role === "agency" ? "/agency/dashboard" : "/client/calendario");
+}
+
+// El dueño ya tiene login y suma otra cuenta de cliente. Requiere su contraseña
+// ACTUAL (así nadie con el link puede engancharse a una cuenta ajena) y solo
+// funciona si el login existente es de cliente. Agrega la membresía, deja esa
+// cuenta como activa y marca la invitación usada. No cambia la contraseña ni el
+// rol de la cuenta existente.
+async function linkExistingClient(
+  inv: { id: string; role: string; client_id: string | null },
+  email: string,
+  password: string
+): Promise<{ ok: false; error: string }> {
+  const admin = createAdminClient();
+  const supabase = await createClient();
+
+  const { data: signIn, error: signErr } = await supabase.auth.signInWithPassword({ email, password });
+  if (signErr || !signIn.user) {
+    return {
+      ok: false,
+      error: "Ese email ya tiene una cuenta. Ingresá tu contraseña actual para sumar esta cuenta a tu acceso.",
+    };
+  }
+
+  const userId = signIn.user.id;
+  const { data: profile } = await admin.from("profiles").select("role").eq("id", userId).maybeSingle();
+  if (!profile || profile.role !== "client") {
+    return { ok: false, error: "Ese email pertenece a una cuenta que no es de cliente." };
+  }
+  if (!inv.client_id) {
+    return { ok: false, error: "La invitación no tiene una cuenta asociada." };
+  }
+
+  await admin
+    .from("client_members")
+    .upsert({ user_id: userId, client_id: inv.client_id }, { onConflict: "user_id,client_id" });
+  // Deja la cuenta recién sumada como activa, para que aterrice en ella.
+  await admin.from("profiles").update({ client_id: inv.client_id }).eq("id", userId);
+  await admin.from("invitations").update({ used_at: new Date().toISOString() }).eq("id", inv.id);
+
+  redirect("/client/calendario");
 }

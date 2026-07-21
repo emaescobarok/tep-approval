@@ -296,7 +296,8 @@ export async function inviteClientUser(
   return res;
 }
 
-// Elimina un usuario CLIENTE de la cuenta indicada (cuenta de acceso + profile).
+// Saca a un usuario CLIENTE de la cuenta indicada. Con multi-cuenta esto quita
+// solo la MEMBRESÍA de esta cuenta; si era la última, se borra el login entero.
 // Solo Admin o Project Manager con acceso a la cuenta.
 export async function deleteClientUser(
   clientId: string,
@@ -309,20 +310,47 @@ export async function deleteClientUser(
   const { data: client } = await supabase.from("clients").select("id").eq("id", clientId).maybeSingle();
   if (!client) return { ok: false, error: "No tenés acceso a esta cuenta." };
 
-  // El usuario a borrar debe ser un cliente de ESTA cuenta (evita borrar a cualquiera).
   const admin = createAdminClient();
   const { data: target } = await admin
     .from("profiles")
     .select("id, role, client_id")
     .eq("id", userId)
     .maybeSingle();
-  if (!target || target.role !== "client" || target.client_id !== clientId) {
+  if (!target || target.role !== "client") {
     return { ok: false, error: "Ese usuario no pertenece a esta cuenta." };
   }
 
-  // Borra la cuenta de acceso; el profile cae por FK on delete cascade.
-  const { error } = await admin.auth.admin.deleteUser(userId);
-  if (error) return { ok: false, error: error.message };
+  // El usuario tiene que ser miembro de ESTA cuenta (evita borrar a cualquiera).
+  const { data: members } = await admin
+    .from("client_members")
+    .select("client_id")
+    .eq("user_id", userId);
+  const memberClientIds = ((members as { client_id: string }[] | null) ?? []).map((m) => m.client_id);
+  if (!memberClientIds.includes(clientId)) {
+    return { ok: false, error: "Ese usuario no pertenece a esta cuenta." };
+  }
+
+  // Última cuenta: se borra el login entero (el profile cae por FK cascade).
+  if (memberClientIds.length <= 1) {
+    const { error } = await admin.auth.admin.deleteUser(userId);
+    if (error) return { ok: false, error: error.message };
+    revalidatePath(`/agency/clientes/${clientId}`);
+    return { ok: true };
+  }
+
+  // Tiene más cuentas: solo se quita la membresía de esta.
+  const { error: delErr } = await admin
+    .from("client_members")
+    .delete()
+    .eq("user_id", userId)
+    .eq("client_id", clientId);
+  if (delErr) return { ok: false, error: delErr.message };
+
+  // Si esta era su cuenta activa, se lo pasa a otra que le quede.
+  if (target.client_id === clientId) {
+    const otra = memberClientIds.find((c) => c !== clientId)!;
+    await admin.from("profiles").update({ client_id: otra }).eq("id", userId);
+  }
 
   revalidatePath(`/agency/clientes/${clientId}`);
   return { ok: true };

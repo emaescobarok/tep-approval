@@ -10,8 +10,11 @@
 --        insert into profiles (id, role, full_name)
 --        values ('<uuid-del-usuario>', 'agency', 'Equipo Tep');
 --   3) Para un usuario cliente, usá el flujo "Invitar usuario" de la app,
---      o: insert into profiles (id, role, client_id, full_name)
---         values ('<uuid>', 'client', '<client_id>', 'Cliente Demo');
+--      o a mano (client_id = cuenta ACTIVA, y la membresía da el acceso):
+--        insert into profiles (id, role, client_id, full_name)
+--          values ('<uuid>', 'client', '<client_id>', 'Cliente Demo');
+--        insert into client_members (user_id, client_id)
+--          values ('<uuid>', '<client_id>');
 -- =====================================================================
 
 insert into clients (id, name, contact_name, contact_email)
