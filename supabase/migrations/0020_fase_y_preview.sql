@@ -18,9 +18,15 @@
 -- nuevas quedan protegidas del cliente solas.
 -- =====================================================================
 
-create type post_fase as enum (
-  'borrador', 'revision', 'produccion', 'check_final', 'programado', 'publicado'
-);
+-- Idempotente: si una corrida anterior ya creó el type, no vuelve a fallar.
+do $$
+begin
+  if not exists (select 1 from pg_type where typname = 'post_fase') then
+    create type post_fase as enum (
+      'borrador', 'revision', 'produccion', 'check_final', 'programado', 'publicado'
+    );
+  end if;
+end $$;
 
 alter table posts add column if not exists fase post_fase not null default 'borrador';
 alter table posts add column if not exists preview_bg text;
