@@ -69,7 +69,7 @@ export default async function CalendarioPage({
     <>
       <Topbar
         title={client?.name ?? "Mi contenido"}
-        subtitle="Revisá y aprobá tus piezas del mes"
+        subtitle="Revisión y aprobación del contenido del mes"
         logoUrl={client?.logo_url}
         right={<MonthSwitcher month={month} year={year} basePath="/client/calendario" extraParams={{ view }} />}
       />
