@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { ExternalLink, CalendarDays, GripVertical } from "lucide-react";
 import { MediaThumb } from "@/components/media-thumb";
@@ -29,6 +29,20 @@ export function PostGrid({
   const [grupos, setGrupos] = useState<Grupo[]>(gruposIniciales);
   const dragIndex = useRef<number | null>(null);
   const [, startTransition] = useTransition();
+
+  // El estado interno solo se inicializa al montar. Cuando el server manda datos
+  // nuevos (se creó/borró/reordenó una pieza y router.refresh() re-renderiza),
+  // hay que resincronizar, si no la grilla queda vieja hasta un F5. La firma
+  // resume el orden e ids actuales; al cambiar, se adopta lo del server.
+  const firma = gruposIniciales
+    .map((g) => `${g.card.id}:${g.stories.map((s) => s.id).join(",")}`)
+    .join("|");
+  useEffect(() => {
+    setGrupos(gruposIniciales);
+    // gruposIniciales cambia de identidad en cada render; la firma es la que
+    // refleja un cambio real de datos.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firma]);
 
   function onDrop(target: number) {
     const from = dragIndex.current;
