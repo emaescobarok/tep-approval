@@ -10,6 +10,8 @@ import { ViewToggle } from "@/components/view-toggle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { sanitizeIntroHtml } from "@/lib/sanitize";
 import { agruparParaGrilla } from "@/lib/posts";
+import { getClientAccounts } from "@/lib/accounts";
+import { AccountSidebar } from "@/components/account-sidebar";
 import type { Post } from "@/lib/types";
 
 export default async function CalendarioPage({
@@ -26,9 +28,9 @@ export default async function CalendarioPage({
   const year = Number(sp.year) || now.getFullYear();
   const view = sp.view === "cal" ? "cal" : "grid";
 
-  // El cliente y el calendario del mes no dependen entre sí (RLS ya garantiza
-  // que el calendario sea del cliente correcto).
-  const [{ data: client }, { data: calendar }] = await Promise.all([
+  // El cliente, el calendario del mes y las cuentas del login no dependen entre
+  // sí (la RLS ya garantiza que el calendario sea del cliente correcto).
+  const [{ data: client }, { data: calendar }, accounts] = await Promise.all([
     supabase.from("clients").select("name, logo_url").eq("id", profile.client_id!).single(),
     supabase
       .from("calendars")
@@ -37,6 +39,7 @@ export default async function CalendarioPage({
       .eq("month", month)
       .eq("year", year)
       .maybeSingle(),
+    getClientAccounts(supabase, profile.id),
   ]);
 
   let posts: Post[] = [];
@@ -74,6 +77,11 @@ export default async function CalendarioPage({
         right={<MonthSwitcher month={month} year={year} basePath="/client/calendario" extraParams={{ view }} />}
       />
       <main className="mx-auto max-w-6xl px-5 py-6">
+        <div className={accounts.length >= 2 ? "grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]" : ""}>
+          {accounts.length >= 2 && (
+            <AccountSidebar accounts={accounts} activeId={profile.client_id!} />
+          )}
+          <div>
         <ProgressSummary estados={posts.map((p) => p.estado)} />
 
         {/* Introducción de la planificación (la escribe el estratega) */}
@@ -127,6 +135,8 @@ export default async function CalendarioPage({
             Todavía no hay contenido cargado para este mes.
           </div>
         )}
+          </div>
+        </div>
       </main>
     </>
   );

@@ -2,7 +2,6 @@ import Image from "next/image";
 import { logout } from "@/app/login/actions";
 import { Button } from "@/components/ui/button";
 import { MentionsBellServer } from "@/components/mentions-bell-server";
-import { AccountSwitcherServer } from "@/components/account-switcher-server";
 import { LogOut } from "lucide-react";
 
 export function Topbar({
@@ -40,7 +39,6 @@ export function Topbar({
             <h1 className="text-lg font-semibold leading-tight">{title}</h1>
             {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
           </div>
-          <AccountSwitcherServer />
         </div>
         <div className="flex items-center gap-2">
           {right}
