@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { MediaThumb } from "@/components/media-thumb";
-import { TIPO_LABEL, objetivoLabel, type Post } from "@/lib/types";
+import { TIPO_LABEL, FASE_LABEL, objetivoLabel, type Post } from "@/lib/types";
 
 // Un día de la agenda: el feed (todo lo que no es historia) + la secuencia de
 // historias de esa misma fecha. La secuencia no es un modelo aparte: son las
@@ -82,11 +82,16 @@ export function AgendaView({
                   >
                     {/* self-stretch: la miniatura toma el alto completo de la tarjeta. */}
                     <div className="relative w-20 shrink-0 self-stretch">
-                      <MediaThumb tipo={p.tipo} url={thumbs[p.id]} fill className="rounded-none" />
+                      <MediaThumb tipo={p.tipo} url={thumbs[p.id]} previewBg={p.preview_bg} previewText={p.preview_text} fill className="rounded-none" />
                     </div>
                     <div className="flex min-w-0 flex-col gap-1 p-3">
                       <span className="truncate text-sm font-medium">{TIPO_LABEL[p.tipo]}</span>
-                      <StatusBadge estado={p.estado} />
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <StatusBadge estado={p.estado} />
+                        <Badge className="border-border bg-muted text-muted-foreground">
+                          {FASE_LABEL[p.fase]}
+                        </Badge>
+                      </div>
                       {p.copy && (
                         <p className="line-clamp-2 text-xs text-muted-foreground">{p.copy}</p>
                       )}
@@ -113,7 +118,7 @@ export function AgendaView({
                       href={`${hrefBase}${p.id}`}
                       className="relative block aspect-[9/16] w-20 overflow-hidden rounded-lg border border-border transition-colors hover:border-accent/50"
                     >
-                      <MediaThumb tipo={p.tipo} url={thumbs[p.id]} fill className="rounded-none" />
+                      <MediaThumb tipo={p.tipo} url={thumbs[p.id]} previewBg={p.preview_bg} previewText={p.preview_text} fill className="rounded-none" />
                       <span className="absolute left-1 top-1 rounded bg-black/50 px-1 text-[10px] font-medium text-white backdrop-blur-sm">
                         {i + 1}
                       </span>
