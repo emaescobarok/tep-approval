@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
 import { requireAgency, canManage } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { computePostMedia, type MediaUrl } from "@/lib/media";
+import { computePostMedia } from "@/lib/media";
 import { MonthSwitcher } from "@/components/month-switcher";
-import { FeedPreview } from "@/components/feed-preview";
 import { MonthCalendar } from "@/components/month-calendar";
 import { ViewToggle, type View } from "@/components/view-toggle";
 import { AgendaView } from "@/components/agenda-view";
@@ -65,12 +64,11 @@ export default async function AgencyClientPage({
 
   let posts: Post[] = [];
   let thumbs: Record<string, string | null> = {};
-  let media: Record<string, MediaUrl[]> = {};
   if (calendar) {
     const { data } = await supabase
       .from("posts").select("*").eq("calendar_id", calendar.id).order("position");
     posts = (data as Post[]) ?? [];
-    ({ thumbs, media } = await computePostMedia(supabase, posts));
+    ({ thumbs } = await computePostMedia(supabase, posts));
   }
 
   return (
@@ -136,17 +134,8 @@ export default async function AgencyClientPage({
           </div>
         </section>
 
-        {/* Panel derecho: preview, subir pieza, invitar usuarios */}
+        {/* Panel derecho: usuarios, estrategas */}
         <aside className="flex flex-col gap-6">
-          {posts.length > 0 && (
-            <Card>
-              <CardHeader><CardTitle className="text-base">Vista previa del feed</CardTitle></CardHeader>
-              <CardContent>
-                <FeedPreview posts={posts} thumbs={thumbs} media={media} handle={client.name} />
-              </CardContent>
-            </Card>
-          )}
-
           <Card>
             <CardHeader><CardTitle className="text-base">Usuarios de la cuenta</CardTitle></CardHeader>
             <CardContent className="flex flex-col gap-3">
