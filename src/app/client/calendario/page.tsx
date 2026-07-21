@@ -1,11 +1,10 @@
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { computePostMedia, type MediaUrl } from "@/lib/media";
+import { computePostMedia } from "@/lib/media";
 import { Topbar } from "@/components/topbar";
 import { ProgressSummary } from "@/components/progress-summary";
 import { MonthSwitcher } from "@/components/month-switcher";
 import { PostCard } from "@/components/post-card";
-import { FeedPreview } from "@/components/feed-preview";
 import { MonthCalendar } from "@/components/month-calendar";
 import { ViewToggle } from "@/components/view-toggle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,7 +41,6 @@ export default async function CalendarioPage({
 
   let posts: Post[] = [];
   let thumbs: Record<string, string | null> = {};
-  let media: Record<string, MediaUrl[]> = {};
   let commentCounts: Record<string, number> = {};
 
   if (calendar) {
@@ -61,7 +59,7 @@ export default async function CalendarioPage({
         ? supabase.from("comments").select("post_id").in("post_id", ids)
         : Promise.resolve({ data: null }),
     ]);
-    ({ thumbs, media } = mediaData);
+    ({ thumbs } = mediaData);
     (comments as { post_id: string }[] | null)?.forEach((c) => {
       commentCounts[c.post_id] = (commentCounts[c.post_id] ?? 0) + 1;
     });
@@ -108,23 +106,17 @@ export default async function CalendarioPage({
                 <MonthCalendar posts={posts} month={month} year={year} hrefBase="/client/pieza/" />
               </div>
             ) : (
-              <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_320px]">
-                <div className="grid h-fit grid-cols-2 gap-4 sm:grid-cols-3">
-                  {agruparParaGrilla(posts).map(({ card, stories }) => (
-                    <PostCard
-                      key={card.id}
-                      post={card}
-                      href={`/client/pieza/${card.id}`}
-                      thumbUrl={thumbs[card.id]}
-                      commentCount={commentCounts[card.id]}
-                      storiesCount={stories.length}
-                    />
-                  ))}
-                </div>
-                <Card className="h-fit">
-                  <CardHeader><CardTitle className="text-base">Vista previa del feed</CardTitle></CardHeader>
-                  <CardContent><FeedPreview posts={posts} thumbs={thumbs} media={media} handle={client?.name ?? "cuenta"} /></CardContent>
-                </Card>
+              <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                {agruparParaGrilla(posts).map(({ card, stories }) => (
+                  <PostCard
+                    key={card.id}
+                    post={card}
+                    href={`/client/pieza/${card.id}`}
+                    thumbUrl={thumbs[card.id]}
+                    commentCount={commentCounts[card.id]}
+                    storiesCount={stories.length}
+                  />
+                ))}
               </div>
             )}
           </>
