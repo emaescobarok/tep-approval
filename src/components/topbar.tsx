@@ -40,15 +40,19 @@ export function Topbar({
             {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        {/* En mobile ocupa toda la fila: el mes a la izquierda, campana+logout a
+            la derecha. En sm+ vuelve a ir compacto al lado del título. */}
+        <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-normal">
           {right}
-          <MentionsBellServer />
-          <form action={logout}>
-            <Button variant="outline" size="sm" type="submit" title="Cerrar sesión">
-              <LogOut className="size-4" />
-              <span className="hidden sm:inline">Cerrar sesión</span>
-            </Button>
-          </form>
+          <div className="flex items-center gap-2">
+            <MentionsBellServer />
+            <form action={logout}>
+              <Button variant="outline" size="sm" type="submit" title="Cerrar sesión">
+                <LogOut className="size-4" />
+                <span className="hidden sm:inline">Cerrar sesión</span>
+              </Button>
+            </form>
+          </div>
         </div>
       </div>
     </header>
