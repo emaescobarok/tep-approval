@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { MediaThumb } from "@/components/media-thumb";
 import { TIPO_LABEL, FASE_LABEL, objetivoLabel, type Post } from "@/lib/types";
+import { FASE_CHIP } from "@/components/tipo-colors";
 
 // Un día de la agenda: el feed (todo lo que no es historia) + la secuencia de
 // historias de esa misma fecha. La secuencia no es un modelo aparte: son las
@@ -88,7 +89,7 @@ export function AgendaView({
                       <span className="truncate text-sm font-medium">{TIPO_LABEL[p.tipo]}</span>
                       <div className="flex flex-wrap items-center gap-1.5">
                         <StatusBadge estado={p.estado} />
-                        <Badge className="border-border bg-muted text-muted-foreground">
+                        <Badge className={FASE_CHIP[p.fase]}>
                           {FASE_LABEL[p.fase]}
                         </Badge>
                       </div>

@@ -61,3 +61,14 @@ export const FASE_COLOR: Record<PostFase, { text: string; border: string }> = {
   programado:  { text: "text-lime-400",    border: "border-lime-400" },
   publicado:   { text: "text-emerald-400", border: "border-emerald-400" },
 };
+
+// Chip de fase: borde + fondo + texto tenues del color de la fase. Para los
+// badges de fase en las cards (grilla, agenda, post-card).
+export const FASE_CHIP: Record<PostFase, string> = {
+  borrador:    "border-neutral-400/40 bg-neutral-400/10 text-neutral-200",
+  revision:    "border-sky-400/40 bg-sky-400/10 text-sky-200",
+  produccion:  "border-violet-400/40 bg-violet-400/10 text-violet-200",
+  check_final: "border-amber-400/40 bg-amber-400/10 text-amber-200",
+  programado:  "border-lime-400/40 bg-lime-400/10 text-lime-200",
+  publicado:   "border-emerald-400/40 bg-emerald-400/10 text-emerald-200",
+};

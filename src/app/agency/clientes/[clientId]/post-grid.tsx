@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { DeletePostButton } from "./delete-post-button";
 import { reorderPosts } from "./actions";
 import { TIPO_LABEL, FASE_LABEL, objetivoLabel, type Post } from "@/lib/types";
+import { FASE_CHIP } from "@/components/tipo-colors";
 import { formatPublishDate } from "@/lib/utils";
 
 type Grupo = { card: Post; stories: Post[] };
@@ -108,7 +109,7 @@ export function PostGrid({
           <div className="flex items-center justify-between gap-1">
             <div className="flex flex-wrap items-center gap-1.5">
               <StatusBadge estado={post.estado} />
-              <Badge className="border-border bg-muted text-muted-foreground">
+              <Badge className={FASE_CHIP[post.fase]}>
                 {FASE_LABEL[post.fase]}
               </Badge>
               {post.drive_url && (

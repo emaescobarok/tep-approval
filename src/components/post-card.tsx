@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { MediaThumb } from "@/components/media-thumb";
 import { TIPO_LABEL, FASE_LABEL, objetivoLabel, type Post } from "@/lib/types";
+import { FASE_CHIP } from "@/components/tipo-colors";
 import { formatPublishDate } from "@/lib/utils";
 import { MessageSquare, CalendarDays } from "lucide-react";
 
@@ -52,7 +53,7 @@ export function PostCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <StatusBadge estado={post.estado} />
-            <Badge className="border-border bg-muted text-muted-foreground">
+            <Badge className={FASE_CHIP[post.fase]}>
               {FASE_LABEL[post.fase]}
             </Badge>
           </div>
