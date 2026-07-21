@@ -37,7 +37,9 @@ export function FaseBar({
         role={readOnly ? undefined : "radiogroup"}
         aria-label="Fase de la pieza"
         className={cn(
-          "flex flex-wrap gap-x-4 gap-y-1 border-b border-border pb-2",
+          // Una sola línea con scroll horizontal: al envolver, el subrayado de la
+          // fase activa se desalineaba y quedaba apretado.
+          "flex gap-x-4 overflow-x-auto border-b border-border pb-2",
           pending && "opacity-70"
         )}
       >
@@ -53,7 +55,7 @@ export function FaseBar({
               disabled={readOnly || pending}
               onClick={() => select(f)}
               className={cn(
-                "-mb-2 border-b-2 pb-2 text-xs font-medium transition-colors outline-none",
+                "-mb-2 shrink-0 whitespace-nowrap border-b-2 pb-2 text-xs font-medium transition-colors outline-none",
                 readOnly ? "cursor-default" : "cursor-pointer",
                 active
                   ? `${color.border} ${color.text}`

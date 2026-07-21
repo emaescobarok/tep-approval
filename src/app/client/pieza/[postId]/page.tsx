@@ -188,7 +188,7 @@ export default async function PiezaPage({
 
               {/* Fase de producción (solo lectura para el cliente) */}
               <div className="border-t border-border pt-4">
-                <p className="mb-2 text-sm font-medium">En qué anda esta pieza</p>
+                <p className="mb-2 text-sm font-medium">Estado de producción</p>
                 <FaseBar fase={p.fase} readOnly />
               </div>
 

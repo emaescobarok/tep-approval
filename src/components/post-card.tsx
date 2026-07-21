@@ -50,15 +50,13 @@ export function PostCard({
             </span>
           )}
         </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <StatusBadge estado={post.estado} />
-            <Badge className={FASE_CHIP[post.fase]}>
-              {FASE_LABEL[post.fase]}
-            </Badge>
-          </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <StatusBadge estado={post.estado} />
+          <Badge className={FASE_CHIP[post.fase]}>
+            {FASE_LABEL[post.fase]}
+          </Badge>
           {!!commentCount && (
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
               <MessageSquare className="size-3.5" />
               {commentCount}
             </span>
