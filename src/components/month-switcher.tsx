@@ -30,7 +30,7 @@ export function MonthSwitcher({
       >
         <ChevronLeft className="size-4" />
       </Link>
-      <span className="min-w-40 text-center text-sm font-medium">
+      <span className="min-w-24 text-center text-sm font-medium sm:min-w-40">
         {MESES[month - 1]} {year}
       </span>
       <Link
