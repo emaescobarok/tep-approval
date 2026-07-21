@@ -1,4 +1,4 @@
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 
 // Sanitizador del HTML enriquecido de la introducción.
 //
@@ -10,11 +10,15 @@ import DOMPurify from "isomorphic-dompurify";
 //
 // Pasaba el chequeo de esquema (empieza con https://) y salía con un onfocus
 // intacto, que además dispara solo por el autofocus. Parsear HTML con regex
-// siempre termina así: DOMPurify arma el DOM de verdad y decide sobre el árbol,
-// no sobre el texto.
+// siempre termina así: sanitize-html arma el árbol de verdad y decide sobre el
+// DOM, no sobre el texto.
+//
+// Se usa sanitize-html (JS puro, htmlparser2) en vez de isomorphic-dompurify:
+// este último arrastra jsdom, que rompía en el runtime de Vercel al bundlearse
+// (ERR_REQUIRE_ESM). sanitize-html corre igual en server y en browser.
 //
 // La política es la misma de antes: formato básico y, en los links, solo href
-// con esquemas seguros.
+// con esquemas seguros (http/https/mailto), y siempre target/rel a pestaña nueva.
 
 const ALLOWED_TAGS = [
   "b", "strong", "i", "em", "u", "br",
@@ -23,24 +27,26 @@ const ALLOWED_TAGS = [
   "a",
 ];
 
-// Solo http(s) y mailto, igual que la versión anterior.
-const ALLOWED_URI_REGEXP = /^(?:https?|mailto):/i;
-
-// Los links de la intro van siempre a pestaña nueva y sin filtrar el referrer.
-// Va en un hook, sobre el nodo ya parseado, en vez de concatenar strings: la
-// concatenación era justamente el bug.
-DOMPurify.addHook("afterSanitizeAttributes", (node) => {
-  if (node.nodeName === "A" && node.hasAttribute("href")) {
-    node.setAttribute("target", "_blank");
-    node.setAttribute("rel", "noopener noreferrer nofollow");
-  }
-});
-
 export function sanitizeIntroHtml(html: string): string {
   if (!html) return "";
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR: ["href", "target", "rel"],
-    ALLOWED_URI_REGEXP,
+  return sanitizeHtml(html, {
+    allowedTags: ALLOWED_TAGS,
+    allowedAttributes: { a: ["href", "target", "rel"] },
+    // Solo http(s) y mailto, igual que la versión anterior.
+    allowedSchemes: ["http", "https", "mailto"],
+    allowedSchemesByTag: { a: ["http", "https", "mailto"] },
+    disallowedTagsMode: "discard",
+    // Los links van siempre a pestaña nueva y sin filtrar el referrer. Se agrega
+    // sobre el árbol ya parseado, no concatenando strings (el bug de antes).
+    transformTags: {
+      a: (tagName, attribs) => {
+        const out = { ...attribs };
+        if (out.href) {
+          out.target = "_blank";
+          out.rel = "noopener noreferrer nofollow";
+        }
+        return { tagName: "a", attribs: out };
+      },
+    },
   });
 }
