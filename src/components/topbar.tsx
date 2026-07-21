@@ -40,10 +40,10 @@ export function Topbar({
             <h1 className="text-lg font-semibold leading-tight">{title}</h1>
             {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
           </div>
+          <AccountSwitcherServer />
         </div>
         <div className="flex items-center gap-2">
           {right}
-          <AccountSwitcherServer />
           <MentionsBellServer />
           <form action={logout}>
             <Button variant="outline" size="sm" type="submit" title="Cerrar sesión">
