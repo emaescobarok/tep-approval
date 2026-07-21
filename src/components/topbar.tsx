@@ -42,7 +42,9 @@ export function Topbar({
         </div>
         {/* En mobile ocupa toda la fila: el mes a la izquierda, campana+logout a
             la derecha. En sm+ vuelve a ir compacto al lado del título. */}
-        <div className="flex w-full items-center gap-2 sm:w-auto">
+        {/* Con selector de mes (calendario) toma su propia fila en mobile; sin él
+            (detalle) queda inline, a la misma altura que el nombre de la cuenta. */}
+        <div className={`flex items-center gap-2 ${right ? "w-full sm:w-auto" : ""}`}>
           {right}
           <div className="ml-auto flex items-center gap-2">
             <MentionsBellServer />
