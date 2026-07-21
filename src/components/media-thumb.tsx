@@ -58,7 +58,7 @@ export function MediaThumb({
         />
       ) : preview ? (
         previewText ? (
-          <span className="line-clamp-5 px-3 text-center text-sm font-bold uppercase leading-tight tracking-tight">
+          <span className="line-clamp-6 px-2 text-center text-sm font-bold uppercase leading-tight tracking-tight [overflow-wrap:anywhere]">
             {previewText}
           </span>
         ) : (

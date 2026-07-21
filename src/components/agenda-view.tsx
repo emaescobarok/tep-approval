@@ -81,7 +81,7 @@ export function AgendaView({
                     className="flex overflow-hidden rounded-lg border border-border transition-colors hover:border-accent/50"
                   >
                     {/* self-stretch: la miniatura toma el alto completo de la tarjeta. */}
-                    <div className="relative w-20 shrink-0 self-stretch">
+                    <div className="relative w-24 shrink-0 self-stretch">
                       <MediaThumb tipo={p.tipo} url={thumbs[p.id]} previewBg={p.preview_bg} previewText={p.preview_text} fill className="rounded-none" />
                     </div>
                     <div className="flex min-w-0 flex-col gap-1 p-3">
