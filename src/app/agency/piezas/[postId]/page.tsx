@@ -163,9 +163,9 @@ export default async function AgencyPiezaPage({
         ) : (
         /* Media (izquierda) + copy/estado/comentarios (derecha) */
         <Card>
-          <CardContent className="grid gap-6 p-5 md:grid-cols-[1.3fr_1fr]">
+          <CardContent className="grid gap-6 p-5 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
             {/* Media (portada + archivos) */}
-            <div className="flex flex-col gap-2">
+            <div className="flex min-w-0 flex-col gap-2">
               {coverUrl && (
                 <Image
                   src={coverUrl} alt="Portada" width={0} height={0}
@@ -205,8 +205,8 @@ export default async function AgencyPiezaPage({
             </div>
 
             {/* Copy + estado + Drive + comentarios */}
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
+            <div className="flex min-w-0 flex-col gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <Badge>{TIPO_LABEL[p.tipo]}</Badge>
                   <Badge className="border-accent/30 bg-accent/10 text-accent">
