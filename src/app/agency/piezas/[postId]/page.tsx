@@ -193,7 +193,7 @@ export default async function AgencyPiezaPage({
                 !coverUrl &&
                 (p.preview_bg ? (
                   // Placeholder de vista previa (color + texto) para el cliente.
-                  <div className="aspect-[4/5] w-full max-w-sm">
+                  <div className="aspect-[4/5] w-full">
                     <MediaThumb tipo={p.tipo} previewBg={p.preview_bg} previewText={p.preview_text} fill className="!relative" />
                   </div>
                 ) : (

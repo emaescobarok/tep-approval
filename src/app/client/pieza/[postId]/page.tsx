@@ -144,7 +144,7 @@ export default async function PiezaPage({
               ) : (
                 !coverUrl &&
                 (p.preview_bg ? (
-                  <div className="aspect-[4/5] w-full max-w-sm">
+                  <div className="aspect-[4/5] w-full">
                     <MediaThumb tipo={p.tipo} previewBg={p.preview_bg} previewText={p.preview_text} fill className="!relative" />
                   </div>
                 ) : (
