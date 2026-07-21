@@ -32,17 +32,18 @@ export default async function PiezaPage({
 }: {
   params: Promise<{ postId: string }>;
 }) {
-  await requireClient();
+  const profile = await requireClient();
   const { postId } = await params;
   const supabase = await createClient();
 
-  // Tanda 1: todo lo que solo depende de postId, en paralelo.
-  const [{ data: post }, { data: mediaRows }, { data: commentRows }, participants] =
+  // Tanda 1: todo lo que solo depende de postId (+ la cuenta activa), en paralelo.
+  const [{ data: post }, { data: mediaRows }, { data: commentRows }, participants, { data: client }] =
     await Promise.all([
       supabase.from("posts").select("*").eq("id", postId).maybeSingle(),
       supabase.from("post_media").select("*").eq("post_id", postId).order("position"),
       supabase.from("comments").select("*").eq("post_id", postId).order("created_at"),
       getPostParticipants(postId),
+      supabase.from("clients").select("name, logo_url").eq("id", profile.client_id!).maybeSingle(),
     ]);
   if (!post) notFound(); // RLS: si no es de su cliente, no lo ve
 
@@ -90,7 +91,11 @@ export default async function PiezaPage({
 
   return (
     <>
-      <Topbar title="Detalle de pieza" subtitle={TIPO_LABEL[p.tipo]} />
+      <Topbar
+        title={client?.name ?? "Detalle de pieza"}
+        subtitle={`Detalle de pieza · ${TIPO_LABEL[p.tipo]}`}
+        logoUrl={client?.logo_url}
+      />
       <main className="mx-auto max-w-6xl px-5 py-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <Link href="/client/calendario" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">

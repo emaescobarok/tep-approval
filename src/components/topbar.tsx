@@ -42,9 +42,9 @@ export function Topbar({
         </div>
         {/* En mobile ocupa toda la fila: el mes a la izquierda, campana+logout a
             la derecha. En sm+ vuelve a ir compacto al lado del título. */}
-        <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-normal">
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           {right}
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2">
             <MentionsBellServer />
             <form action={logout}>
               <Button variant="outline" size="sm" type="submit" title="Cerrar sesión">
