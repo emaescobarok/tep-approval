@@ -1,4 +1,4 @@
-import type { PostTipo } from "@/lib/types";
+import type { PostTipo, PostFase } from "@/lib/types";
 
 // Un color por tipo de pieza, para distinguirlos de un vistazo (sobre todo en el
 // calendario, donde solo se ve una línea de texto por pieza).
@@ -31,4 +31,33 @@ export const TIPO_GRADIENT: Record<PostTipo, string> = {
   reel_video: "from-violet-400 to-fuchsia-600",
   historia: "from-amber-300 to-orange-500",
   texto: "from-neutral-400 to-neutral-600",
+};
+
+// Fondos para el placeholder de vista previa (piezas sin material todavía).
+// La clave se guarda en posts.preview_bg. Cada valor lleva fondo + un color de
+// texto legible sobre ese fondo, para que el texto de preview se lea siempre.
+export const PREVIEW_BG: Record<string, { swatch: string; box: string }> = {
+  claro:    { swatch: "bg-neutral-100", box: "bg-neutral-100 text-neutral-900" },
+  oscuro:   { swatch: "bg-neutral-900", box: "bg-neutral-900 text-neutral-100" },
+  lima:     { swatch: "bg-lime-300",    box: "bg-lime-300 text-neutral-900" },
+  ambar:    { swatch: "bg-amber-300",   box: "bg-amber-300 text-neutral-900" },
+  durazno:  { swatch: "bg-orange-300",  box: "bg-orange-300 text-neutral-900" },
+  rosa:     { swatch: "bg-pink-300",    box: "bg-pink-300 text-neutral-900" },
+  violeta:  { swatch: "bg-violet-400",  box: "bg-violet-400 text-white" },
+  cielo:    { swatch: "bg-sky-300",     box: "bg-sky-300 text-neutral-900" },
+  esmeralda:{ swatch: "bg-emerald-400", box: "bg-emerald-400 text-neutral-900" },
+  vino:     { swatch: "bg-rose-700",    box: "bg-rose-700 text-white" },
+};
+
+export const PREVIEW_BG_KEYS = Object.keys(PREVIEW_BG);
+
+// Color por fase de producción: avanza de neutro (borrador) a verde (publicado),
+// pasando por el camino. Se usa para el texto y el subrayado de la fase activa.
+export const FASE_COLOR: Record<PostFase, { text: string; border: string }> = {
+  borrador:    { text: "text-neutral-300", border: "border-neutral-300" },
+  revision:    { text: "text-sky-400",     border: "border-sky-400" },
+  produccion:  { text: "text-violet-400",  border: "border-violet-400" },
+  check_final: { text: "text-amber-400",   border: "border-amber-400" },
+  programado:  { text: "text-lime-400",    border: "border-lime-400" },
+  publicado:   { text: "text-emerald-400", border: "border-emerald-400" },
 };

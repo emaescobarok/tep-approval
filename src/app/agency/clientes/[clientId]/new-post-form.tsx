@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { ObjetivoPicker } from "@/components/objetivo-picker";
+import { PreviewPicker } from "@/components/preview-picker";
 import {
   PLATAFORMA_DEFAULT,
   TIPOS_FORM,
@@ -22,10 +23,13 @@ export function NewPostForm({
   clientId,
   month,
   year,
+  onCreated,
 }: {
   clientId: string;
   month: number;
   year: number;
+  // Se llama después de crear la pieza (ej. para cerrar el modal).
+  onCreated?: () => void;
 }) {
   const router = useRouter();
   const [tipo, setTipo] = useState<PostTipo>("imagen");
@@ -37,6 +41,8 @@ export function NewPostForm({
   const [driveUrl, setDriveUrl] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [cover, setCover] = useState<File | null>(null);
+  const [previewBg, setPreviewBg] = useState<string | null>(null);
+  const [previewText, setPreviewText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -105,6 +111,7 @@ export function NewPostForm({
       objetivo, objetivoOtro,
       plataforma: PLATAFORMA_DEFAULT,
       copy, publishDate, driveUrl, coverPath, media,
+      previewBg, previewText,
     });
     setBusy(false);
     if (!res.ok) {
@@ -118,6 +125,9 @@ export function NewPostForm({
     setObjetivoOtro("");
     setFiles([]);
     setCover(null);
+    setPreviewBg(null);
+    setPreviewText("");
+    onCreated?.();
     router.refresh();
   }
 
@@ -192,6 +202,20 @@ export function NewPostForm({
           <p className="text-xs text-muted-foreground">{files.length} archivo(s) seleccionado(s)</p>
         )}
       </div>
+
+      {/* Vista previa: solo tiene sentido si todavía no hay material cargado.
+          Le muestra al cliente un cuadrado con color + texto en vez de vacío. */}
+      {files.length === 0 && (
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium">Vista previa (si todavía no hay material)</label>
+          <PreviewPicker
+            bg={previewBg}
+            onBgChange={setPreviewBg}
+            text={previewText}
+            onTextChange={setPreviewText}
+          />
+        </div>
+      )}
 
       {isReel && (
         <div className="flex flex-col gap-1.5">

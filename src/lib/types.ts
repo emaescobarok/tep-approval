@@ -7,6 +7,9 @@ export type PostTipo = "carrusel" | "imagen" | "reel_video" | "historia" | "text
 export type PostObjetivo = "marca" | "productos" | "resenas" | "promos" | "faq" | "otro";
 export type PostPlataforma = "instagram" | "facebook" | "tiktok" | "linkedin" | "x";
 export type PostEstado = "pendiente" | "aprobado" | "cambios_pedidos";
+// Fase de producción de la pieza. Eje distinto del estado de aprobación:
+// 'estado' lo mueve el cliente (aprobar/pedir cambios); 'fase' la mueve la agencia.
+export type PostFase = "borrador" | "revision" | "produccion" | "check_final" | "programado" | "publicado";
 export type MediaTipo = "image" | "video";
 
 export interface Client {
@@ -87,6 +90,9 @@ export interface Post {
   plataforma: PostPlataforma;
   copy: string | null;
   estado: PostEstado;
+  fase: PostFase;
+  preview_bg: string | null; // clave de PREVIEW_BG; solo se usa si la pieza no tiene media
+  preview_text: string | null;
   position: number;
   publish_date: string | null;
   drive_url: string | null;
@@ -155,6 +161,30 @@ export const ESTADO_LABEL: Record<PostEstado, string> = {
   pendiente: "Pendiente",
   aprobado: "Aprobado",
   cambios_pedidos: "Cambios pedidos",
+};
+
+// Fases de producción, en orden. La agencia va moviendo la pieza por acá.
+export const FASES: PostFase[] = [
+  "borrador", "revision", "produccion", "check_final", "programado", "publicado",
+];
+
+export const FASE_LABEL: Record<PostFase, string> = {
+  borrador: "Borrador",
+  revision: "Revisión",
+  produccion: "Producción",
+  check_final: "Check final",
+  programado: "Programado",
+  publicado: "Publicado",
+};
+
+// Texto que ve el cliente según la fase. Único lugar para ajustarlo.
+export const FASE_TEXTO: Record<PostFase, string> = {
+  borrador: "El equipo está trabajando en esto. Te avisamos cuando esté listo para revisar.",
+  revision: "Estamos revisando internamente la pieza antes de mostrártela.",
+  produccion: "La pieza está en producción: armando el diseño y el material final.",
+  check_final: "Último control de calidad antes de dejarla lista.",
+  programado: "Aprobada y programada para publicarse en la fecha indicada.",
+  publicado: "Esta pieza ya se publicó.",
 };
 
 export const MESES = [

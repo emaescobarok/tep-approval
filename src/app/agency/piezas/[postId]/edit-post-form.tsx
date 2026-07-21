@@ -7,6 +7,7 @@ import { updatePost } from "../../clientes/[clientId]/actions";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { ObjetivoPicker } from "@/components/objetivo-picker";
+import { PreviewPicker } from "@/components/preview-picker";
 import {
   TIPOS_CON_COPY_OBLIGATORIO,
   type MediaTipo,
@@ -37,6 +38,8 @@ export function EditPostForm({
   initialMedia,
   initialCoverPath,
   initialCoverUrl,
+  initialPreviewBg,
+  initialPreviewText,
 }: {
   postId: string;
   clientId: string;
@@ -49,6 +52,8 @@ export function EditPostForm({
   initialMedia: InitialMedia[];
   initialCoverPath: string | null;
   initialCoverUrl: string | null;
+  initialPreviewBg: string | null;
+  initialPreviewText: string;
 }) {
   const router = useRouter();
   const isReel = tipo === "reel_video";
@@ -68,6 +73,8 @@ export function EditPostForm({
     }))
   );
   const [removedPaths, setRemovedPaths] = useState<string[]>([]);
+  const [previewBg, setPreviewBg] = useState<string | null>(initialPreviewBg);
+  const [previewText, setPreviewText] = useState(initialPreviewText);
 
   // Portada del reel
   const [coverPath, setCoverPath] = useState<string | null>(initialCoverPath);
@@ -187,6 +194,8 @@ export function EditPostForm({
       publishDate,
       driveUrl,
       coverPath: isReel ? finalCoverPath : null,
+      previewBg,
+      previewText,
       media,
       removedPaths,
     });
@@ -275,6 +284,19 @@ export function EditPostForm({
           />
         </label>
       </div>
+
+      {/* Vista previa: solo si todavía no hay material cargado. */}
+      {items.length === 0 && (
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium">Vista previa (si todavía no hay material)</label>
+          <PreviewPicker
+            bg={previewBg}
+            onBgChange={setPreviewBg}
+            text={previewText}
+            onTextChange={setPreviewText}
+          />
+        </div>
+      )}
 
       {/* Objetivo */}
       <div className="flex flex-col gap-1.5">

@@ -1,28 +1,23 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAgency, canManage } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { computePostMedia, type MediaUrl } from "@/lib/media";
 import { MonthSwitcher } from "@/components/month-switcher";
-import { MediaThumb } from "@/components/media-thumb";
 import { FeedPreview } from "@/components/feed-preview";
 import { MonthCalendar } from "@/components/month-calendar";
 import { ViewToggle, type View } from "@/components/view-toggle";
 import { AgendaView } from "@/components/agenda-view";
-import { Badge } from "@/components/ui/badge";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MESES, TIPO_LABEL, objetivoLabel, type Post } from "@/lib/types";
-import { NewPostForm } from "./new-post-form";
+import { MESES, type Post } from "@/lib/types";
+import { agruparParaGrilla } from "@/lib/posts";
+import { PostGrid } from "./post-grid";
+import { NewPostDialog } from "./new-post-dialog";
 import { InviteForm } from "./invite-form";
 import { AssignmentToggle } from "../../equipo/assignment-toggle";
-import { DeletePostButton } from "./delete-post-button";
 import { DeleteUserButton } from "./delete-user-button";
 import { IntroEditor } from "./intro-editor";
 import { EditClientForm } from "./edit-client-form";
 import { ClientLogo } from "@/components/client-logo";
-import { formatPublishDate } from "@/lib/utils";
-import { ExternalLink, CalendarDays } from "lucide-react";
 
 export default async function AgencyClientPage({
   params,
@@ -116,71 +111,27 @@ export default async function AgencyClientPage({
           </Card>
 
           <div>
-            <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-sm font-medium text-muted-foreground">
                 Piezas del mes ({posts.length})
               </h2>
-              {posts.length > 0 && (
-                <ViewToggle view={view} basePath={`/agency/clientes/${clientId}`} month={month} year={year} />
-              )}
+              <div className="flex items-center gap-2">
+                {posts.length > 0 && (
+                  <ViewToggle view={view} basePath={`/agency/clientes/${clientId}`} month={month} year={year} />
+                )}
+                <NewPostDialog clientId={clientId} month={month} year={year} />
+              </div>
             </div>
             {posts.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border bg-card/50 p-12 text-center text-muted-foreground">
-                Sin piezas. Cargá la primera desde el panel de la derecha.
+                Sin piezas todavía. Creá la primera con el botón <span className="font-medium text-foreground">Crear pieza</span>.
               </div>
             ) : view === "cal" ? (
               <MonthCalendar posts={posts} month={month} year={year} hrefBase="/agency/piezas/" />
             ) : view === "agenda" ? (
               <AgendaView posts={posts} thumbs={thumbs} hrefBase="/agency/piezas/" />
             ) : (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {posts.map((post) => (
-                  <div key={post.id} className="group flex flex-col gap-1.5">
-                    {/* Imagen protagonista (clickeable, abre el detalle) */}
-                    <Link
-                      href={`/agency/piezas/${post.id}`}
-                      className="relative block aspect-[4/5] overflow-hidden rounded-xl"
-                    >
-                      <MediaThumb tipo={post.tipo} url={thumbs[post.id]} fill className="transition-transform duration-200 group-hover:scale-[1.03]" />
-                      {/* Fecha + tipo sobre la imagen */}
-                      <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-1 bg-gradient-to-b from-black/50 to-transparent p-2">
-                        <div className="flex min-w-0 flex-wrap items-center gap-1">
-                          <Badge className="bg-black/50 text-white backdrop-blur-sm">{TIPO_LABEL[post.tipo]}</Badge>
-                          {/* max-w + truncate: un objetivo 'otro' puede traer hasta 40 caracteres. */}
-                          <Badge
-                            title={objetivoLabel(post)}
-                            className="max-w-[7rem] border-transparent bg-accent text-accent-foreground backdrop-blur-sm"
-                          >
-                            <span className="truncate">{objetivoLabel(post)}</span>
-                          </Badge>
-                        </div>
-                        {post.publish_date && (
-                          <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-white drop-shadow">
-                            <CalendarDays className="size-3" /> {formatPublishDate(post.publish_date)}
-                          </span>
-                        )}
-                      </div>
-                    </Link>
-
-                    {/* Meta compacta debajo (sin copy: aparece al abrir la pieza) */}
-                    <div className="flex items-center justify-between gap-1">
-                      <div className="flex items-center gap-2">
-                        <StatusBadge estado={post.estado} />
-                        {post.drive_url && (
-                          <a
-                            href={post.drive_url} target="_blank" rel="noopener noreferrer"
-                            title="Ver en Drive"
-                            className="inline-flex items-center gap-0.5 text-xs text-primary hover:underline"
-                          >
-                            <ExternalLink className="size-3" /> Drive
-                          </a>
-                        )}
-                      </div>
-                      <DeletePostButton postId={post.id} clientId={clientId} />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <PostGrid grupos={agruparParaGrilla(posts)} thumbs={thumbs} clientId={clientId} />
             )}
           </div>
         </section>
@@ -195,13 +146,6 @@ export default async function AgencyClientPage({
               </CardContent>
             </Card>
           )}
-
-          <Card>
-            <CardHeader><CardTitle className="text-base">Nueva pieza</CardTitle></CardHeader>
-            <CardContent>
-              <NewPostForm clientId={clientId} month={month} year={year} />
-            </CardContent>
-          </Card>
 
           <Card>
             <CardHeader><CardTitle className="text-base">Usuarios de la cuenta</CardTitle></CardHeader>

@@ -6,7 +6,10 @@ import { NavArrow } from "@/components/nav-arrow";
 import { EditPostForm } from "./edit-post-form";
 import { requireAgency } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { signedUrls } from "@/lib/media";
+import { signedUrls, computeThumbs } from "@/lib/media";
+import { MediaThumb } from "@/components/media-thumb";
+import { StoriesStrip } from "@/components/stories-strip";
+import { FaseBar } from "@/components/fase-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -18,6 +21,7 @@ import { TIPO_LABEL, objetivoLabel, type Comment, type Post, type PostMedia } fr
 import { formatPublishDate, cn } from "@/lib/utils";
 import { CalendarDays } from "lucide-react";
 import { addAgencyComment, deleteComment } from "./actions";
+import { updateFase } from "../../clientes/[clientId]/actions";
 
 export default async function AgencyPiezaPage({
   params,
@@ -74,7 +78,21 @@ export default async function AgencyPiezaPage({
     .from("clients").select("name").eq("id", cal!.client_id).single();
   const backHref = `/agency/clientes/${cal!.client_id}?month=${cal!.month}&year=${cal!.year}`;
 
+  // Historias del mismo día (para mostrar la secuencia junto al feed). Solo si
+  // esta pieza no es una historia y tiene fecha.
+  let dayStories: Post[] = [];
+  let storyThumbs: Record<string, string | null> = {};
+  if (p.tipo !== "historia" && p.publish_date) {
+    const { data: st } = await supabase
+      .from("posts").select("*")
+      .eq("calendar_id", p.calendar_id).eq("tipo", "historia")
+      .eq("publish_date", p.publish_date).order("position");
+    dayStories = (st as Post[]) ?? [];
+    storyThumbs = await computeThumbs(supabase, dayStories);
+  }
+
   const comment = addAgencyComment.bind(null, postId);
+  const changeFase = updateFase.bind(null, postId, cal!.client_id);
   // Sin esto, CommentThread no muestra el botón de borrar.
   const removeComment = profile.is_admin ? deleteComment.bind(null, postId) : undefined;
 
@@ -137,6 +155,8 @@ export default async function AgencyPiezaPage({
                 }))}
                 initialCoverPath={p.cover_path}
                 initialCoverUrl={coverUrl}
+                initialPreviewBg={p.preview_bg}
+                initialPreviewText={p.preview_text ?? ""}
               />
             </CardContent>
           </Card>
@@ -170,11 +190,17 @@ export default async function AgencyPiezaPage({
                   )}
                 </div>
               ) : (
-                !coverUrl && (
+                !coverUrl &&
+                (p.preview_bg ? (
+                  // Placeholder de vista previa (color + texto) para el cliente.
+                  <div className="aspect-[4/5] w-full max-w-sm">
+                    <MediaThumb tipo={p.tipo} previewBg={p.preview_bg} previewText={p.preview_text} fill className="!relative" />
+                  </div>
+                ) : (
                   <div className="flex h-full min-h-40 items-center justify-center rounded-xl bg-secondary/50 text-sm text-muted-foreground">
                     Sin media subida (el archivo puede estar en Drive)
                   </div>
-                )
+                ))
               )}
             </div>
 
@@ -211,6 +237,12 @@ export default async function AgencyPiezaPage({
                 </a>
               )}
 
+              {/* Fase de producción: la agencia la mueve; abajo el texto que ve el cliente */}
+              <div className="border-t border-border pt-4">
+                <p className="mb-2 text-sm font-medium">Fase de producción</p>
+                <FaseBar fase={p.fase} onChange={changeFase} />
+              </div>
+
               {/* Comentarios en la misma columna, para aprovechar el alto */}
               <div className="mt-2 flex flex-col gap-3 border-t border-border pt-4">
                 <p className="text-sm font-medium">Comentarios</p>
@@ -228,6 +260,14 @@ export default async function AgencyPiezaPage({
               </div>
             </div>
           </CardContent>
+          {dayStories.length > 0 && (
+            <div className="border-t border-border p-5">
+              <p className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground">
+                STORIES · SECUENCIA DEL DÍA
+              </p>
+              <StoriesStrip stories={dayStories} thumbs={storyThumbs} hrefBase="/agency/piezas/" />
+            </div>
+          )}
         </Card>
         )}
       </main>

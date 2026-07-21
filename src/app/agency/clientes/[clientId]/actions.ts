@@ -6,6 +6,8 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { createInvitedUser, type InviteResult } from "@/lib/invites";
 import {
   TIPOS_CON_COPY_OBLIGATORIO,
+  FASES,
+  type PostFase,
   type PostObjetivo,
   type PostPlataforma,
   type PostTipo,
@@ -62,6 +64,8 @@ export async function createPost(input: {
   publishDate?: string | null;
   driveUrl?: string;
   coverPath?: string | null;
+  previewBg?: string | null;
+  previewText?: string;
   media: MediaInput[];
 }) {
   await requireAgency();
@@ -91,6 +95,8 @@ export async function createPost(input: {
       publish_date: input.publishDate,
       drive_url: input.driveUrl?.trim() || null,
       cover_path: input.coverPath || null,
+      preview_bg: input.previewBg || null,
+      preview_text: input.previewText?.trim() || null,
     })
     .select("id")
     .single();
@@ -123,6 +129,8 @@ export async function updatePost(input: {
   publishDate?: string | null;
   driveUrl?: string;
   coverPath?: string | null;
+  previewBg?: string | null;
+  previewText?: string;
   media: MediaInput[];
   removedPaths: string[];
 }): Promise<{ ok: boolean; error?: string }> {
@@ -148,6 +156,8 @@ export async function updatePost(input: {
       publish_date: input.publishDate,
       drive_url: input.driveUrl?.trim() || null,
       cover_path: input.coverPath || null,
+      preview_bg: input.previewBg || null,
+      preview_text: input.previewText?.trim() || null,
     })
     .eq("id", input.postId);
   if (upErr) return { ok: false, error: upErr.message };
@@ -216,6 +226,41 @@ export async function deletePost(
   const { error } = await supabase.from("posts").delete().eq("id", postId);
   if (error) return { ok: false, error: error.message };
 
+  revalidatePath(`/agency/clientes/${clientId}`);
+  return { ok: true };
+}
+
+// La agencia mueve la pieza a otra fase de producción. Solo agencia (la fase la
+// mueve el equipo, nunca el cliente; la DB además lo bloquea vía trigger 0019).
+export async function updateFase(
+  postId: string,
+  clientId: string,
+  fase: PostFase
+): Promise<{ ok: boolean; error?: string }> {
+  await requireAgency();
+  if (!FASES.includes(fase)) return { ok: false, error: "Fase inválida." };
+  const supabase = await createClient();
+  const { error } = await supabase.from("posts").update({ fase }).eq("id", postId);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/agency/clientes/${clientId}`);
+  revalidatePath(`/agency/piezas/${postId}`);
+  return { ok: true };
+}
+
+// Reordena las piezas de la grilla. Recibe los ids en el nuevo orden (ya
+// aplanado: cada tarjeta seguida de sus historias) y reescribe `position`.
+// Solo agencia; la RLS ya limita a las piezas del cliente accesible.
+export async function reorderPosts(
+  clientId: string,
+  orderedIds: string[]
+): Promise<{ ok: boolean; error?: string }> {
+  await requireAgency();
+  const supabase = await createClient();
+  const results = await Promise.all(
+    orderedIds.map((id, i) => supabase.from("posts").update({ position: i }).eq("id", id))
+  );
+  const failed = results.find((r) => r.error);
+  if (failed?.error) return { ok: false, error: failed.error.message };
   revalidatePath(`/agency/clientes/${clientId}`);
   return { ok: true };
 }

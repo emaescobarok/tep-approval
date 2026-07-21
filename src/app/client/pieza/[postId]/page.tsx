@@ -6,7 +6,10 @@ import { NavArrow } from "@/components/nav-arrow";
 import { formatPublishDate, cn } from "@/lib/utils";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { signedUrls } from "@/lib/media";
+import { signedUrls, computeThumbs } from "@/lib/media";
+import { MediaThumb } from "@/components/media-thumb";
+import { StoriesStrip } from "@/components/stories-strip";
+import { FaseBar } from "@/components/fase-bar";
 import { Topbar } from "@/components/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +72,18 @@ export default async function PiezaPage({
   const prevId = idx > 0 ? siblings[idx - 1].id : null;
   const nextId = idx >= 0 && idx < siblings.length - 1 ? siblings[idx + 1].id : null;
 
+  // Historias del mismo día, para ver la secuencia junto al feed.
+  let dayStories: Post[] = [];
+  let storyThumbs: Record<string, string | null> = {};
+  if (p.tipo !== "historia" && p.publish_date) {
+    const { data: st } = await supabase
+      .from("posts").select("*")
+      .eq("calendar_id", p.calendar_id).eq("tipo", "historia")
+      .eq("publish_date", p.publish_date).order("position");
+    dayStories = (st as Post[]) ?? [];
+    storyThumbs = await computeThumbs(supabase, dayStories);
+  }
+
   const approve = approvePost.bind(null, postId);
   const reqChanges = requestChanges.bind(null, postId);
   const comment = addComment.bind(null, postId);
@@ -127,11 +142,16 @@ export default async function PiezaPage({
                   )}
                 </div>
               ) : (
-                !coverUrl && (
+                !coverUrl &&
+                (p.preview_bg ? (
+                  <div className="aspect-[4/5] w-full max-w-sm">
+                    <MediaThumb tipo={p.tipo} previewBg={p.preview_bg} previewText={p.preview_text} fill className="!relative" />
+                  </div>
+                ) : (
                   <div className="flex h-full min-h-40 items-center justify-center rounded-xl bg-secondary/50 text-sm text-muted-foreground">
                     El archivo puede estar en Drive
                   </div>
-                )
+                ))
               )}
             </div>
 
@@ -166,6 +186,12 @@ export default async function PiezaPage({
                 </a>
               )}
 
+              {/* Fase de producción (solo lectura para el cliente) */}
+              <div className="border-t border-border pt-4">
+                <p className="mb-2 text-sm font-medium">En qué anda esta pieza</p>
+                <FaseBar fase={p.fase} readOnly />
+              </div>
+
               {/* Decisión */}
               <DecisionBox estado={p.estado} approve={approve} requestChanges={reqChanges} />
 
@@ -182,6 +208,14 @@ export default async function PiezaPage({
               </div>
             </div>
           </CardContent>
+          {dayStories.length > 0 && (
+            <div className="border-t border-border p-5">
+              <p className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground">
+                STORIES · SECUENCIA DEL DÍA
+              </p>
+              <StoriesStrip stories={dayStories} thumbs={storyThumbs} hrefBase="/client/pieza/" />
+            </div>
+          )}
         </Card>
       </main>
     </>

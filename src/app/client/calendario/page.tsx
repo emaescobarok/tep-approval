@@ -10,6 +10,7 @@ import { MonthCalendar } from "@/components/month-calendar";
 import { ViewToggle } from "@/components/view-toggle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { sanitizeIntroHtml } from "@/lib/sanitize";
+import { agruparParaGrilla } from "@/lib/posts";
 import type { Post } from "@/lib/types";
 
 export default async function CalendarioPage({
@@ -109,13 +110,14 @@ export default async function CalendarioPage({
             ) : (
               <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_320px]">
                 <div className="grid h-fit grid-cols-2 gap-4 sm:grid-cols-3">
-                  {posts.map((post) => (
+                  {agruparParaGrilla(posts).map(({ card, stories }) => (
                     <PostCard
-                      key={post.id}
-                      post={post}
-                      href={`/client/pieza/${post.id}`}
-                      thumbUrl={thumbs[post.id]}
-                      commentCount={commentCounts[post.id]}
+                      key={card.id}
+                      post={card}
+                      href={`/client/pieza/${card.id}`}
+                      thumbUrl={thumbs[card.id]}
+                      commentCount={commentCounts[card.id]}
+                      storiesCount={stories.length}
                     />
                   ))}
                 </div>
