@@ -78,7 +78,7 @@ export function DatePicker({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-2 rounded-xl border border-border bg-popover p-3 shadow-lg">
+        <div className="absolute right-0 top-full z-50 mt-2 w-max rounded-xl border border-border bg-popover p-3 shadow-lg">
           <DayPicker
             mode="single"
             locale={es}
