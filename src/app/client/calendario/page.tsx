@@ -81,7 +81,7 @@ export default async function CalendarioPage({
           {accounts.length >= 2 && (
             <AccountSidebar accounts={accounts} activeId={profile.client_id!} />
           )}
-          <div>
+          <div className="min-w-0">
         <ProgressSummary estados={posts.map((p) => p.estado)} />
 
         {/* Introducción de la planificación (la escribe el estratega) */}

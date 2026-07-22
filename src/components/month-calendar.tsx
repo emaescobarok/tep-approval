@@ -53,7 +53,7 @@ export function MonthCalendar({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="-mx-1 overflow-x-auto px-1">
+      <div className="overflow-x-auto">
       <div className="grid min-w-[440px] grid-cols-7 gap-px overflow-hidden rounded-xl border border-border bg-border">
         {WEEKDAYS.map((w) => (
           <div
