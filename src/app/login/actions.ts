@@ -40,8 +40,11 @@ export async function logout() {
 export async function requestPasswordReset(formData: FormData) {
   const email = String(formData.get("email") || "").trim();
   const supabase = await createClient();
+  // Pasa por /auth/callback: ahí se canjea el code por la sesión (server-side,
+  // donde vive el code_verifier del PKCE) y recién después va a /reset-password.
+  // Mandarlo directo a /reset-password dejaba la página sin sesión de recovery.
   await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`,
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/reset-password`,
   });
   redirect("/forgot-password?sent=1");
 }
