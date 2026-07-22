@@ -54,7 +54,7 @@ export function MonthCalendar({
   return (
     <div className="flex flex-col gap-3">
       <div className="overflow-x-auto">
-      <div className="grid min-w-[440px] grid-cols-7 gap-px overflow-hidden rounded-xl border border-border bg-border">
+      <div className="grid grid-cols-7 gap-px overflow-hidden rounded-xl border border-border bg-border">
         {WEEKDAYS.map((w) => (
           <div
             key={w}
@@ -67,21 +67,23 @@ export function MonthCalendar({
           <div
             key={i}
             className={cn(
-              "min-h-16 bg-card p-1.5 sm:min-h-24",
+              "min-h-14 bg-card p-1 sm:min-h-24 sm:p-1.5",
               day === null && "bg-muted/30"
             )}
           >
             {day !== null && (
               <>
                 <span className="text-[11px] font-medium text-muted-foreground">{day}</span>
-                <div className="mt-1 flex flex-col gap-1">
+                {/* Mobile: puntitos que envuelven (las celdas son angostas).
+                    sm+: chips con el texto del tipo, apilados. */}
+                <div className="mt-1 flex flex-wrap gap-1 sm:flex-col">
                   {(byDay.get(day) ?? []).map((p) => (
                     <Link
                       key={p.id}
                       href={`${hrefBase}${p.id}`}
                       title={`${TIPO_LABEL[p.tipo]} · ${ESTADO_LABEL[p.estado]}`}
                       className={cn(
-                        "flex items-center gap-1 rounded-md border px-1.5 py-1 text-[10px] font-medium leading-tight transition-opacity hover:opacity-80",
+                        "flex items-center gap-1 rounded-md border p-0.5 text-[10px] font-medium leading-tight transition-opacity hover:opacity-80 sm:px-1.5 sm:py-1",
                         TIPO_CHIP[p.tipo]
                       )}
                     >
@@ -92,7 +94,7 @@ export function MonthCalendar({
                           estadoRing[p.estado]
                         )}
                       />
-                      <span className="truncate">{TIPO_LABEL[p.tipo]}</span>
+                      <span className="hidden truncate sm:inline">{TIPO_LABEL[p.tipo]}</span>
                     </Link>
                   ))}
                 </div>
