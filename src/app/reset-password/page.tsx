@@ -19,10 +19,17 @@ export default function ResetPasswordPage() {
     setLoading(true);
     setError(null);
     const supabase = createClient();
+    // Sin sesión de recovery activa no hay nada que actualizar: mensaje claro.
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      setLoading(false);
+      setError("El link no es válido o expiró. Pedí uno nuevo desde «Olvidé mi contraseña».");
+      return;
+    }
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
     if (error) {
-      setError("No se pudo guardar la contraseña. El link puede haber expirado.");
+      setError(`No se pudo guardar la contraseña: ${error.message}`);
       return;
     }
     router.push("/");
