@@ -82,12 +82,12 @@ export default async function AgencyClientPage({
 
   return (
     <>
-      <header className="md:sticky md:top-0 z-10 flex items-center justify-between border-b border-border bg-background/80 px-6 py-4 backdrop-blur">
-        <div className="flex items-center gap-3">
-          <ClientLogo name={client.name} logoUrl={client.logo_url} className="size-11" />
-          <div>
-            <h1 className="text-xl font-semibold">{client.name}</h1>
-            <p className="text-sm text-muted-foreground">
+      <header className="md:sticky md:top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background/80 px-4 py-4 backdrop-blur sm:px-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <ClientLogo name={client.name} logoUrl={client.logo_url} className="size-11 shrink-0" />
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-semibold">{client.name}</h1>
+            <p className="truncate text-sm text-muted-foreground">
               Contenido de {MESES[month - 1]} {year}
             </p>
           </div>
@@ -96,12 +96,12 @@ export default async function AgencyClientPage({
       </header>
 
       {canManage(profile) && (
-        <div className="mx-auto flex max-w-6xl px-6 pt-4">
+        <div className="mx-auto flex max-w-6xl px-4 pt-4 sm:px-6">
           <EditClientForm client={client} />
         </div>
       )}
 
-      <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         {/* Grilla de piezas */}
         <section className="flex min-w-0 flex-col gap-6">
           {/* Introducción de la planificación */}
