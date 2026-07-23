@@ -1,20 +1,28 @@
 -- =====================================================================
--- Migración 0022 (SEED, una sola vez): 9 vistas previas por cuenta
+-- Migración 0022: 9 vistas previas por cuenta, cada mes, automático
 --
--- Agrega 9 piezas "vista previa" (color de fondo + texto, sin material) al mes
--- ACTUAL de cada cuenta, repartidas en fechas y con colores variados. Son piezas
--- normales: la agencia las edita como cualquier otra (cargar media, cambiar copy,
--- objetivo, fase, etc.). Pensado para arrancar el mes con una grilla armada.
+-- Cada mes, en TODAS las cuentas, aparecen 9 piezas "vista previa" (color de
+-- fondo + texto, sin material), repartidas en fechas y con colores variados. Son
+-- piezas normales: la agencia las edita como cualquier otra (media, copy,
+-- objetivo, fase...). Pensado para arrancar el mes con una grilla ya armada.
 --
--- Idempotente: si una cuenta ya tiene vistas previas 'Pieza N' en ese mes, se
--- saltea (podés re-correrlo sin duplicar).
+--  - `seed_month_previews(month, year)`: siembra ese mes en cada cliente.
+--    Idempotente: si una cuenta ya tiene vistas previas 'Pieza N' ese mes, la
+--    saltea. SECURITY DEFINER para poder insertar saltando RLS.
+--  - Se corre YA para el mes actual.
+--  - Un cron (pg_cron) la corre el día 1 de cada mes para el mes nuevo.
 -- =====================================================================
 
-do $$
+create extension if not exists pg_cron with schema extensions;
+
+create or replace function seed_month_previews(p_month smallint, p_year smallint)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
 declare
-  v_month  smallint := extract(month from now())::smallint;
-  v_year   smallint := extract(year  from now())::smallint;
-  v_colors text[]   := array['lima','ambar','durazno','rosa','violeta','cielo','esmeralda','vino','claro'];
+  v_colors text[] := array['lima','ambar','durazno','rosa','violeta','cielo','esmeralda','vino','claro'];
   v_client record;
   v_cal_id uuid;
   v_base   int;
@@ -22,22 +30,21 @@ declare
   v_day    int;
 begin
   for v_client in select id from clients loop
-    -- Calendario del mes actual (se crea si no existe).
+    -- Calendario del mes (se crea si no existe).
     select id into v_cal_id
       from calendars
-      where client_id = v_client.id and month = v_month and year = v_year;
+      where client_id = v_client.id and month = p_month and year = p_year;
     if v_cal_id is null then
       insert into calendars (client_id, month, year)
-        values (v_client.id, v_month, v_year)
+        values (v_client.id, p_month, p_year)
         returning id into v_cal_id;
     end if;
 
-    -- Si ya se sembró antes en este mes, no duplicar.
+    -- Si ya se sembró este mes, no duplicar.
     if exists (select 1 from posts where calendar_id = v_cal_id and preview_text like 'Pieza %') then
       continue;
     end if;
 
-    -- Las nuevas se agregan después de lo que ya haya (position).
     select coalesce(max(position), -1) + 1 into v_base from posts where calendar_id = v_cal_id;
 
     for i in 1..9 loop
@@ -48,10 +55,27 @@ begin
       ) values (
         v_cal_id, 'imagen', 'marca', 'instagram', 'pendiente', 'borrador',
         v_base + (i - 1),
-        make_date(v_year::int, v_month::int, v_day),
+        make_date(p_year::int, p_month::int, v_day),
         v_colors[i],
         'Pieza ' || i
       );
     end loop;
   end loop;
-end $$;
+end;
+$$;
+
+-- Solo el service_role la ejecuta directo; nadie más la necesita.
+revoke all on function seed_month_previews(smallint, smallint) from public, anon, authenticated;
+
+-- Sembrar el mes actual ya.
+select seed_month_previews(extract(month from now())::smallint, extract(year from now())::smallint);
+
+-- Cron: el día 1 de cada mes (06:00 UTC) siembra el mes nuevo en todas las cuentas.
+select cron.unschedule('seed-month-previews')
+where exists (select 1 from cron.job where jobname = 'seed-month-previews');
+
+select cron.schedule(
+  'seed-month-previews',
+  '0 6 1 * *',
+  $$ select seed_month_previews(extract(month from now())::smallint, extract(year from now())::smallint); $$
+);
