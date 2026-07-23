@@ -114,7 +114,7 @@ export default async function CalendarioPage({
                 <MonthCalendar posts={posts} month={month} year={year} hrefBase="/client/pieza/" />
               </div>
             ) : (
-              <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+              <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-4">
                 {agruparParaGrilla(posts).map(({ card, stories }) => (
                   <PostCard
                     key={card.id}
