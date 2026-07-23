@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { updatePost } from "../../clientes/[clientId]/actions";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { ObjetivoPicker } from "@/components/objetivo-picker";
 import { PreviewPicker } from "@/components/preview-picker";
 import {
   TIPOS_CON_COPY_OBLIGATORIO,
+  TIPOS_FORM,
+  TIPO_LABEL,
   type MediaTipo,
   type PostObjetivo,
   type PostTipo,
@@ -29,7 +32,7 @@ type InitialMedia = { storagePath: string; mediaType: MediaTipo; url: string };
 export function EditPostForm({
   postId,
   clientId,
-  tipo,
+  tipo: initialTipo,
   initialObjetivo,
   initialObjetivoOtro,
   initialCopy,
@@ -56,6 +59,7 @@ export function EditPostForm({
   initialPreviewText: string;
 }) {
   const router = useRouter();
+  const [tipo, setTipo] = useState<PostTipo>(initialTipo);
   const isReel = tipo === "reel_video";
   const copyRequired = TIPOS_CON_COPY_OBLIGATORIO.includes(tipo);
 
@@ -210,6 +214,16 @@ export function EditPostForm({
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Formato de la pieza (se puede cambiar: placa/carrusel/reel/historia) */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium">Formato</label>
+        <Select
+          value={tipo}
+          onChange={setTipo}
+          options={TIPOS_FORM.map((t) => ({ value: t, label: TIPO_LABEL[t] }))}
+        />
+      </div>
+
       {isReel && (
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium">Portada del reel</label>

@@ -162,6 +162,7 @@ export async function updatePost(input: {
   const { error: upErr } = await supabase
     .from("posts")
     .update({
+      tipo: input.tipo,
       objetivo: obj.objetivo,
       objetivo_otro: obj.objetivo_otro,
       copy: copyTrim || null,
