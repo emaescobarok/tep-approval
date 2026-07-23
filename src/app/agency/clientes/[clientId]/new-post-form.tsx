@@ -73,22 +73,54 @@ export function NewPostForm({
 
     const supabase = createClient();
     const folder = crypto.randomUUID();
-    const media: { storage_path: string; media_type: "image" | "video" }[] = [];
 
-    for (const file of files) {
+    // Sube un archivo a Storage y devuelve su ruta (o null si falla, ya seteando error).
+    async function subir(file: File): Promise<{ storage_path: string; media_type: "image" | "video" } | null> {
       const path = `${clientId}/${folder}/${file.name}`;
       const { error: upErr } = await supabase.storage
         .from("post-media")
         .upload(path, file, { upsert: false });
       if (upErr) {
         setError(`Error al subir ${file.name}: ${upErr.message}`);
-        setBusy(false);
-        return;
+        return null;
       }
-      media.push({
-        storage_path: path,
-        media_type: file.type.startsWith("video") ? "video" : "image",
-      });
+      return { storage_path: path, media_type: file.type.startsWith("video") ? "video" : "image" };
+    }
+
+    // Historia con varias imágenes: cada una es una historia de la secuencia.
+    // Se crea una pieza por archivo (en orden), en vez de meter todo en una sola.
+    if (tipo === "historia" && files.length > 1) {
+      for (const file of files) {
+        const m = await subir(file);
+        if (!m) { setBusy(false); return; }
+        const res = await createPost({
+          clientId, month, year, tipo,
+          objetivo, objetivoOtro,
+          plataforma: PLATAFORMA_DEFAULT,
+          copy, publishDate, driveUrl, coverPath: null, media: [m],
+          previewBg, previewText,
+        });
+        if (!res.ok) {
+          setBusy(false);
+          setError(res.error ?? "No se pudo crear la historia.");
+          return;
+        }
+      }
+      setBusy(false);
+      setCopy(""); setDriveUrl(""); setPublishDate("");
+      setObjetivo(""); setObjetivoOtro("");
+      setFiles([]); setCover(null);
+      setPreviewBg(null); setPreviewText("");
+      onCreated?.();
+      router.refresh();
+      return;
+    }
+
+    const media: { storage_path: string; media_type: "image" | "video" }[] = [];
+    for (const file of files) {
+      const m = await subir(file);
+      if (!m) { setBusy(false); return; }
+      media.push(m);
     }
 
     // Portada del reel (opcional)
@@ -200,6 +232,15 @@ export function NewPostForm({
         />
         {files.length > 0 && (
           <p className="text-xs text-muted-foreground">{files.length} archivo(s) seleccionado(s)</p>
+        )}
+        {tipo === "historia" ? (
+          <p className="text-xs text-muted-foreground">
+            Podés elegir varias imágenes de una: cada una se crea como una historia de la secuencia del día.
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Tip: seleccioná varias imágenes juntas para no cargarlas de a una.
+          </p>
         )}
       </div>
 

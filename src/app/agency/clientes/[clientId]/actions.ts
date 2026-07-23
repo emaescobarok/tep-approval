@@ -83,6 +83,17 @@ export async function createPost(input: {
 
   const calendarId = await ensureCalendar(input.clientId, input.month, input.year);
 
+  // La pieza nueva se agrega al final (max position + 1). Así, si se crean varias
+  // seguidas (ej. una secuencia de historias), quedan en orden.
+  const { data: last } = await supabase
+    .from("posts")
+    .select("position")
+    .eq("calendar_id", calendarId)
+    .order("position", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const nextPosition = ((last?.position as number | undefined) ?? -1) + 1;
+
   const { data: post, error } = await supabase
     .from("posts")
     .insert({
@@ -92,6 +103,7 @@ export async function createPost(input: {
       objetivo_otro: obj.objetivo_otro,
       plataforma: input.plataforma,
       copy: copyTrim || null,
+      position: nextPosition,
       publish_date: input.publishDate,
       drive_url: input.driveUrl?.trim() || null,
       cover_path: input.coverPath || null,
