@@ -9,7 +9,7 @@ import { MonthCalendar } from "@/components/month-calendar";
 import { ViewToggle } from "@/components/view-toggle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { sanitizeIntroHtml } from "@/lib/sanitize";
-import { agruparParaGrilla } from "@/lib/posts";
+import { agruparParaGrilla, defaultMonthYear } from "@/lib/posts";
 import { getClientAccounts } from "@/lib/accounts";
 import { AccountSidebar } from "@/components/account-sidebar";
 import type { Post } from "@/lib/types";
@@ -22,10 +22,10 @@ export default async function CalendarioPage({
   const profile = await requireClient();
   const supabase = await createClient();
 
-  const now = new Date();
   const sp = await searchParams;
-  const month = Number(sp.month) || now.getMonth() + 1;
-  const year = Number(sp.year) || now.getFullYear();
+  const def = defaultMonthYear();
+  const month = Number(sp.month) || def.month;
+  const year = Number(sp.year) || def.year;
   const view = sp.view === "cal" ? "cal" : "grid";
 
   // El cliente, el calendario del mes y las cuentas del login no dependen entre

@@ -1,5 +1,13 @@
 import type { Post } from "@/lib/types";
 
+// Mes/año por defecto de los calendarios. Se trabaja un mes ADELANTADO, así que
+// por defecto se muestra el mes siguiente (maneja el salto de año en diciembre).
+export function defaultMonthYear(): { month: number; year: number } {
+  const now = new Date();
+  const base = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  return { month: base.getMonth() + 1, year: base.getFullYear() };
+}
+
 // Una "tarjeta" de la grilla: la pieza protagonista del día (una placa/reel/
 // carrusel) y las historias de esa misma fecha, que se muestran pegadas a ella
 // en vez de como tarjetas sueltas.

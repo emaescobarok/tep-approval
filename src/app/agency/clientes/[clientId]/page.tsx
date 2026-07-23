@@ -8,7 +8,7 @@ import { ViewToggle, type View } from "@/components/view-toggle";
 import { AgendaView } from "@/components/agenda-view";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MESES, type Post } from "@/lib/types";
-import { agruparParaGrilla } from "@/lib/posts";
+import { agruparParaGrilla, defaultMonthYear } from "@/lib/posts";
 import { PostGrid } from "./post-grid";
 import { NewPostDialog } from "./new-post-dialog";
 import { InviteForm } from "./invite-form";
@@ -29,10 +29,10 @@ export default async function AgencyClientPage({
   const { clientId } = await params;
   const supabase = await createClient();
 
-  const now = new Date();
   const sp = await searchParams;
-  const month = Number(sp.month) || now.getMonth() + 1;
-  const year = Number(sp.year) || now.getFullYear();
+  const def = defaultMonthYear();
+  const month = Number(sp.month) || def.month;
+  const year = Number(sp.year) || def.year;
   const view: View = sp.view === "cal" ? "cal" : sp.view === "agenda" ? "agenda" : "grid";
 
   const manager = canManage(profile);
