@@ -77,7 +77,7 @@ export default async function CalendarioPage({
         right={<MonthSwitcher month={month} year={year} basePath="/client/calendario" extraParams={{ view }} />}
       />
       <main className="mx-auto max-w-6xl px-5 py-6">
-        <div className={accounts.length >= 2 ? "grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]" : ""}>
+        <div className={accounts.length >= 2 ? "grid grid-cols-1 gap-6 lg:grid-cols-[220px_minmax(0,1fr)]" : ""}>
           {accounts.length >= 2 && (
             <AccountSidebar accounts={accounts} activeId={profile.client_id!} />
           )}
