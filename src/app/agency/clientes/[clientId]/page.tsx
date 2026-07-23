@@ -101,9 +101,9 @@ export default async function AgencyClientPage({
         </div>
       )}
 
-      <main className="mx-auto grid max-w-6xl gap-6 px-6 py-6 lg:grid-cols-[1fr_340px]">
+      <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         {/* Grilla de piezas */}
-        <section className="flex flex-col gap-6">
+        <section className="flex min-w-0 flex-col gap-6">
           {/* Introducción de la planificación */}
           <Card>
             <CardHeader><CardTitle className="text-base">Introducción de la planificación</CardTitle></CardHeader>
