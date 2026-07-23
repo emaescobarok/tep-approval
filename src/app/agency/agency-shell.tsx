@@ -127,7 +127,10 @@ export function AgencyShell({
         </div>
       </aside>
 
-      <div className="min-h-screen">{children}</div>
+      {/* overflow-x-hidden en mobile: evita que un desborde horizontal empuje
+          todo el contenido a la izquierda. En md+ se deja visible para no romper
+          el header sticky (overflow-x recorta también el sticky). */}
+      <div className="min-h-screen overflow-x-hidden md:overflow-x-visible">{children}</div>
     </div>
   );
 }
