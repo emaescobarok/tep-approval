@@ -109,6 +109,9 @@ export default async function AgencyClientPage({
             <CardHeader><CardTitle className="text-base">Introducción de la planificación</CardTitle></CardHeader>
             <CardContent>
               <IntroEditor
+                // key por mes/año: al cambiar de mes, se re-monta con la intro
+                // correcta en vez de conservar en estado la del mes anterior.
+                key={`${clientId}-${month}-${year}`}
                 clientId={clientId}
                 month={month}
                 year={year}
