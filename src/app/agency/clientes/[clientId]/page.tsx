@@ -125,7 +125,7 @@ export default async function AgencyClientPage({
               <h2 className="text-sm font-medium text-muted-foreground">
                 Piezas del mes ({posts.length})
               </h2>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 {posts.length > 0 && (
                   <ViewToggle view={view} basePath={`/agency/clientes/${clientId}`} month={month} year={year} />
                 )}
