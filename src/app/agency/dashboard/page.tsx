@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MonthSwitcher } from "@/components/month-switcher";
 import { MESES, type PostEstado } from "@/lib/types";
+import { defaultMonthYear } from "@/lib/posts";
 import { AddClientForm } from "./add-client-form";
 import { DeleteClientButton } from "./delete-client-button";
 import { ClientLogo } from "@/components/client-logo";
@@ -17,10 +18,10 @@ export default async function AgencyDashboard({
   const isAdmin = profile.is_admin;
   const supabase = await createClient();
 
-  const now = new Date();
   const sp = await searchParams;
-  const month = Number(sp.month) || now.getMonth() + 1;
-  const year = Number(sp.year) || now.getFullYear();
+  const def = defaultMonthYear();
+  const month = Number(sp.month) || def.month;
+  const year = Number(sp.year) || def.year;
 
   const { data: clients } = await supabase.from("clients").select("*").order("name");
 
